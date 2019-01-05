@@ -3,6 +3,7 @@ package localserver
 import (
 	"crypto/md5"
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 	"strconv"
 
@@ -37,37 +38,36 @@ func (s *LocalServer) NewPlayer() (entity.Entity, error) {
 	e := entity.Entity{
 		ID,
 		entity.Character,
-		types.Position{types.Coord{2, 2}, 0},
+		types.Position{types.Coord{rand.Intn(3), rand.Intn(3)}, 0},
 	}
 
 	s.entities = append(s.entities, e)
+	fmt.Println(s.entities)
 	return e, nil
 }
 
 func (s *LocalServer) PerformAction(e entity.Entity, p types.Position) (entity.Entity, error) {
 	e = s.moveTo(e, p)
-	s.checkCollisions()
+	s.checkCollisions(e)
 	return e, nil
 }
 
 func (s *LocalServer) Entities() []entity.Entity {
-	entities := []entity.Entity{}
-	return entities
+	return s.entities
 }
 
 func (s *LocalServer) World() types.World {
 	return s.world
 }
 
-func (s *LocalServer) checkCollisions() {
+func (s *LocalServer) checkCollisions(p entity.Entity) {
 
 	// Check for collisions
-	// for i, e := range s.entities {
-	// 	if p != e && p.Coord == e.Coord {
-	// 		s.entities[i] = e.Destroy()
-	// 		s.score = calculateScore(s.entities)
-	// 	}
-	// }
+	for i, e := range s.entities {
+		if p != e && p.Position.Coord == e.Position.Coord {
+			s.entities[i] = e.Destroy()
+		}
+	}
 }
 
 func NewID() string {

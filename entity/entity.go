@@ -19,3 +19,18 @@ type Entity struct {
 	Type     Type
 	Position types.Position
 }
+
+func (e Entity) Destroy() Entity {
+	switch e.Type {
+	case Coin:
+		return Entity{
+			Position: types.Position{types.Coord{-1, -1}, 0},
+			Type:     Score,
+		}
+	}
+
+	return Entity{
+		Position: types.Position{types.Coord{-1, -1}, 0},
+		Type:     Empty,
+	}
+}

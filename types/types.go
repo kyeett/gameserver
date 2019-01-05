@@ -14,7 +14,7 @@ type Position struct {
 	Theta int
 }
 
-type Tile int
+type Tile byte
 
 const (
 	Invalid Tile = iota + 1
@@ -22,6 +22,12 @@ const (
 	Grass
 	GrassUp = 12 + Water
 )
+
+func NewWorld(ts []Tile, width, height int) World {
+	return World{
+		ts, width, height,
+	}
+}
 
 type World struct {
 	tiles         []Tile
