@@ -4,6 +4,7 @@ import (
 	"crypto/md5"
 	"encoding/hex"
 	"fmt"
+	"log"
 	"math/rand"
 	"strconv"
 
@@ -22,8 +23,8 @@ type LocalServer struct {
 
 func New() gameserver.GameServer {
 	entities := []entity.Entity{
-		entity.Entity{NewID(), entity.Coin, types.Position{types.Coord{2, 1}, 0}},
-		entity.Entity{NewID(), entity.Coin, types.Position{types.Coord{8, 2}, 0}},
+		entity.Entity{NewID(), entity.Coin, types.Position{types.Coord{2, 1}, 0}, ""},
+		entity.Entity{NewID(), entity.Coin, types.Position{types.Coord{8, 2}, 0}, ""},
 	}
 
 	return &LocalServer{
@@ -36,9 +37,10 @@ func (s *LocalServer) NewPlayer() (entity.Entity, error) {
 
 	ID := NewID()
 	e := entity.Entity{
-		ID,
-		entity.Character,
-		types.Position{types.Coord{rand.Intn(3), rand.Intn(3)}, 0},
+		ID:       ID,
+		Type:     entity.Character,
+		Position: types.Position{types.Coord{rand.Intn(3), rand.Intn(3)}, 0},
+		Owner:    "",
 	}
 
 	s.entities = append(s.entities, e)
@@ -65,7 +67,8 @@ func (s *LocalServer) checkCollisions(p entity.Entity) {
 	// Check for collisions
 	for i, e := range s.entities {
 		if p != e && p.Position.Coord == e.Position.Coord {
-			s.entities[i] = e.Destroy()
+			fmt.Println(p, "destory", e)
+			s.entities[i] = e.Destroy(p.ID)
 		}
 	}
 }
@@ -77,16 +80,32 @@ func NewID() string {
 	return ID
 }
 
+// Todo: design the rules for entity interaction a bit better
 func (s *LocalServer) moveTo(a entity.Entity, c types.Position) entity.Entity {
 	if s.world.ValidTarget(c) == false {
 		return a
 	}
 
+	var found = -1
+	var blocked bool
 	for i, e := range s.entities {
-		if e == a {
-			s.entities[i].Position = c
-			return s.entities[i]
+		if e.ID == a.ID {
+			found = i
+			continue
+		}
+
+		if e.Type == entity.Character && e.Position.Coord == c.Coord {
+			blocked = true
 		}
 	}
-	return a
+
+	if found == -1 {
+		log.Fatalf("Should not happend, moveTo got invalid entityID=%s, from entity=%s", a.ID, a)
+	}
+
+	if !blocked {
+		s.entities[found].Position = c
+	}
+
+	return s.entities[found]
 }

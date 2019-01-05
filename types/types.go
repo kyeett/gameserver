@@ -1,5 +1,9 @@
 package types
 
+import (
+	"fmt"
+)
+
 type Coord struct{ X, Y int }
 
 func (c Coord) Add(d Coord) Coord {
@@ -7,6 +11,10 @@ func (c Coord) Add(d Coord) Coord {
 		X: c.X + d.X,
 		Y: c.Y + d.Y,
 	}
+}
+
+func (c Coord) String() string {
+	return fmt.Sprintf("%d,%d", c.X, c.Y)
 }
 
 type Position struct {
@@ -50,7 +58,15 @@ var FirstWorld = World{
 	10, 10,
 }
 
-func (w *World) ValidTarget(t Position) bool {
+func (w World) TileBytes() []byte {
+	var bs []byte
+	for _, t := range w.tiles {
+		bs = append(bs, byte(t))
+	}
+	return bs
+}
+
+func (w World) ValidTarget(t Position) bool {
 	if t.X < 0 || t.X >= w.Width || t.Y < 0 || t.Y >= w.Height {
 		return false
 	}
