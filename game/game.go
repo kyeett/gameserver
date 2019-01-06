@@ -2,7 +2,6 @@ package game
 
 import (
 	"context"
-	"fmt"
 	"strings"
 
 	"github.com/onrik/logrus/filename"
@@ -17,6 +16,7 @@ import (
 )
 
 type Game struct {
+	ctx  context.Context
 	opts options
 	gameserver.GameServer
 }
@@ -49,6 +49,7 @@ func New(opt ...Option) (*Game, error) {
 	log.AddHook(filenameHook)
 
 	g := &Game{
+		ctx:  context.Background(),
 		opts: defaultGameOptions,
 	}
 	opts := defaultGameOptions
@@ -86,7 +87,7 @@ func World(name string) Option {
 			for world := range definedWorlds {
 				s = append(s, world)
 			}
-			return errors.Errorf("No such map '%s'. Valid ones are", name, strings.Join(s, ", "))
+			return errors.Errorf("No such map '%s'. Valid ones are %s", name, strings.Join(s, ", "))
 		}
 
 		o.world = definedWorlds[name]
@@ -100,10 +101,11 @@ func RemoteState(addr string) Option {
 	return func(o *options) error {
 		log.Debugf("Configure state server to: remote\n")
 		o.initiateStateFunc = func(g *Game) error {
-			serverAddr := fmt.Sprintf("localhost:%d", defaultPort)
+			// serverAddr := fmt.Sprintf("localhost:%d", defaultPort)
+			serverAddr := addr
 			s, err := grpc.NewClient(serverAddr)
 			if err != nil {
-				return nil
+				return err
 			}
 			g.GameServer = s
 			log.Debugf("Syncing state towards %s\n", serverAddr)
@@ -114,18 +116,20 @@ func RemoteState(addr string) Option {
 }
 
 // DevServer creates and runs game state server on localhost
-func DevServer(o *options) error {
-	log.Debugf("Configure game to start local dev server\n")
-	o.startDevServer = func(g *Game) error {
-		log.Debugf("Start dev server in background\n")
+func DevServer(port string) Option {
+	return func(o *options) error {
+		log.Debugf("Configure game to start local dev server\n")
+		o.startDevServer = func(g *Game) error {
+			log.Debugf("Start dev server in background\n")
 
-		//Todo: don't start go routine in here?
-		ss, err := grpc.NewServer(g.opts.world)
-		if err != nil {
-			return err
+			//Todo: don't start go routine in here?
+			ss, err := grpc.NewServer(g.opts.world)
+			if err != nil {
+				return err
+			}
+			go ss.Run(g.ctx, port)
+			return nil
 		}
-		go ss.Run(context.Background())
 		return nil
 	}
-	return nil
 }

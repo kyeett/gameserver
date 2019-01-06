@@ -12,6 +12,7 @@ import (
 	"github.com/kyeett/gameserver/entity"
 	pb "github.com/kyeett/gameserver/grpc/proto"
 	"github.com/kyeett/gameserver/types"
+	"github.com/pkg/errors"
 
 	log "github.com/sirupsen/logrus"
 )
@@ -29,16 +30,19 @@ type GrpcClient struct {
 }
 
 func NewClient(serverAddr string) (gameserver.GameServer, error) {
+	log.SetLevel(log.DebugLevel)
+	ctx := context.Background() // Todo move this out
+	ctx, _ = context.WithTimeout(ctx, 2*time.Second)
 
 	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
 	if err != nil {
 		return nil, err
 	}
-
 	client := pb.NewBackendClient(conn)
-	resp, err := client.WorldRequest(context.Background(), &pb.Empty{})
+	resp, err := client.WorldRequest(ctx, &pb.Empty{}, grpc.WaitForReady(true))
 	if err != nil {
-		return nil, err
+		log.Debug("client failed to connect to %sdebug:", err)
+		return nil, errors.Errorf("client failed to connect to %s", serverAddr)
 	}
 
 	var ts []types.Tile
@@ -120,8 +124,9 @@ func (s *GrpcClient) PerformAction(e entity.Entity, p types.Position) (entity.En
 }
 
 func (s *GrpcClient) NewPlayer() (entity.Entity, error) {
-	log.Debug("create new player")
-	ctx, _ := context.WithTimeout(context.Background(), 100*time.Millisecond)
+	t := time.Now()
+	ctx, _ := context.WithTimeout(context.Background(), 1000*time.Millisecond)
+	log.Debug("created a new player in", time.Since(t))
 	resp, err := s.client.NewPlayer(ctx, &pb.Empty{})
 	if err != nil {
 		return entity.Entity{}, err
@@ -129,9 +134,8 @@ func (s *GrpcClient) NewPlayer() (entity.Entity, error) {
 
 	// Wait until the new player is available
 	log.Debug("Wait until new player is available")
-	ticker := time.NewTicker(20 * time.Millisecond)
+	ticker := time.NewTicker(2 * time.Millisecond)
 	for {
-		log.Debug("Trololo")
 
 		s.mu.RLock()
 		for _, e := range s.entities {

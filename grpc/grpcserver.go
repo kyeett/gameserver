@@ -2,6 +2,7 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"net"
 	"sync"
 	"time"
@@ -35,10 +36,8 @@ func NewServer(w types.World) (*GrpcServer, error) {
 }
 
 // Todo clean up
-func (s *GrpcServer) Run(ctx context.Context) {
-
-	port := ":10001"
-	lis, err := net.Listen("tcp", port)
+func (s *GrpcServer) Run(ctx context.Context, port string) {
+	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
 	}
@@ -51,7 +50,6 @@ func (s *GrpcServer) Run(ctx context.Context) {
 		<-ctx.Done()
 		ss.GracefulStop()
 	}()
-
 	log.Infof("starting server at %s", port)
 	if err := ss.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
@@ -71,7 +69,7 @@ func (s *GrpcServer) NewPlayer(ctx context.Context, _ *pb.Empty) (*pb.PlayerID, 
 
 // Todo, decide format to send over wire
 func (s *GrpcServer) WorldRequest(ctx context.Context, _ *pb.Empty) (*pb.WorldResponse, error) {
-
+	log.Info("got WorldRequest from client")
 	return &pb.WorldResponse{
 		Tiles:  s.local.World().TileBytes(),
 		Width:  int32(s.local.World().Width),
@@ -81,11 +79,8 @@ func (s *GrpcServer) WorldRequest(ctx context.Context, _ *pb.Empty) (*pb.WorldRe
 }
 func (s *GrpcServer) EntityStream(_ *pb.Empty, stream pb.Backend_EntityStreamServer) error {
 
-	i := 0
-	ticker := time.NewTicker(20 * time.Millisecond)
+	ticker := time.NewTicker(5 * time.Millisecond)
 	for {
-		// log.Debug("push entities")
-		i++
 		<-ticker.C
 
 		s.mu.Lock()
@@ -99,6 +94,7 @@ func (s *GrpcServer) EntityStream(_ *pb.Empty, stream pb.Backend_EntityStreamSer
 		stream.Send(&pb.EntityResponse{
 			Payload: payload,
 		})
+
 	}
 }
 
