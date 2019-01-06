@@ -23,8 +23,8 @@ type LocalServer struct {
 
 func New() gameserver.GameServer {
 	entities := []entity.Entity{
-		entity.Entity{NewID(), entity.Coin, types.Position{types.Coord{2, 1}, 0}, ""},
-		entity.Entity{NewID(), entity.Coin, types.Position{types.Coord{8, 2}, 0}, ""},
+		entity.Entity{ID: newID(), Type: entity.Coin, Position: types.Position{types.Coord{2, 1}, 0}, Owner: ""},
+		entity.Entity{ID: newID(), Type: entity.Coin, Position: types.Position{types.Coord{8, 2}, 0}, Owner: ""},
 	}
 
 	return &LocalServer{
@@ -35,7 +35,7 @@ func New() gameserver.GameServer {
 
 func (s *LocalServer) NewPlayer() (entity.Entity, error) {
 
-	ID := NewID()
+	ID := newID()
 	e := entity.Entity{
 		ID:       ID,
 		Type:     entity.Character,
@@ -45,12 +45,6 @@ func (s *LocalServer) NewPlayer() (entity.Entity, error) {
 
 	s.entities = append(s.entities, e)
 	fmt.Println(s.entities)
-	return e, nil
-}
-
-func (s *LocalServer) PerformAction(e entity.Entity, p types.Position) (entity.Entity, error) {
-	e = s.moveTo(e, p)
-	s.checkCollisions(e)
 	return e, nil
 }
 
@@ -67,17 +61,18 @@ func (s *LocalServer) checkCollisions(p entity.Entity) {
 	// Check for collisions
 	for i, e := range s.entities {
 		if p != e && p.Position.Coord == e.Position.Coord {
-			fmt.Println(p, "destory", e)
+			fmt.Println(p, "destroy", e)
 			s.entities[i] = e.Destroy(p.ID)
 		}
 	}
 }
 
-func NewID() string {
-	hash := md5.New()
-	hash.Write([]byte(strconv.Itoa(rand.Intn(123456))))
-	ID := hex.EncodeToString(hash.Sum(nil))[0:12]
-	return ID
+func (s *LocalServer) PerformAction(e entity.Entity, p types.Position) (entity.Entity, error) {
+	fmt.Println("Perform action", e, p)
+	e = s.moveTo(e, p)
+	fmt.Println("Performed action", e)
+	s.checkCollisions(e)
+	return e, nil
 }
 
 // Todo: design the rules for entity interaction a bit better
@@ -108,4 +103,11 @@ func (s *LocalServer) moveTo(a entity.Entity, c types.Position) entity.Entity {
 	}
 
 	return s.entities[found]
+}
+
+func newID() string {
+	hash := md5.New()
+	hash.Write([]byte(strconv.Itoa(rand.Intn(123456))))
+	ID := hex.EncodeToString(hash.Sum(nil))[0:12]
+	return ID
 }

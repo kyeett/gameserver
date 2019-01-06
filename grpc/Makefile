@@ -3,4 +3,4 @@ generate:
 		--go_out=plugins=grpc:$$GOPATH/src
 
 clean:
-	rm -f ./proto/remote/* 
+	rm -f ./proto/*.pb.go 

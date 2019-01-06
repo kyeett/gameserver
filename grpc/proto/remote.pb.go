@@ -24,6 +24,28 @@ var _ = math.Inf
 // proto package needs to be updated.
 const _ = proto.ProtoPackageIsVersion3 // please upgrade the proto package
 
+type ActionRequest_Action int32
+
+const (
+	ActionRequest_Move ActionRequest_Action = 0
+)
+
+var ActionRequest_Action_name = map[int32]string{
+	0: "Move",
+}
+
+var ActionRequest_Action_value = map[string]int32{
+	"Move": 0,
+}
+
+func (x ActionRequest_Action) String() string {
+	return proto.EnumName(ActionRequest_Action_name, int32(x))
+}
+
+func (ActionRequest_Action) EnumDescriptor() ([]byte, []int) {
+	return fileDescriptor_b59cb7d8fa836ac0, []int{2, 0}
+}
+
 type PlayerID struct {
 	ID                   string   `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
@@ -63,6 +85,155 @@ func (m *PlayerID) GetID() string {
 	return ""
 }
 
+type Entity struct {
+	ID                   string   `protobuf:"bytes,1,opt,name=ID,proto3" json:"ID,omitempty"`
+	X                    int32    `protobuf:"varint,2,opt,name=X,proto3" json:"X,omitempty"`
+	Y                    int32    `protobuf:"varint,3,opt,name=Y,proto3" json:"Y,omitempty"`
+	Theta                int32    `protobuf:"varint,4,opt,name=Theta,proto3" json:"Theta,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *Entity) Reset()         { *m = Entity{} }
+func (m *Entity) String() string { return proto.CompactTextString(m) }
+func (*Entity) ProtoMessage()    {}
+func (*Entity) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b59cb7d8fa836ac0, []int{1}
+}
+
+func (m *Entity) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_Entity.Unmarshal(m, b)
+}
+func (m *Entity) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_Entity.Marshal(b, m, deterministic)
+}
+func (m *Entity) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_Entity.Merge(m, src)
+}
+func (m *Entity) XXX_Size() int {
+	return xxx_messageInfo_Entity.Size(m)
+}
+func (m *Entity) XXX_DiscardUnknown() {
+	xxx_messageInfo_Entity.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_Entity proto.InternalMessageInfo
+
+func (m *Entity) GetID() string {
+	if m != nil {
+		return m.ID
+	}
+	return ""
+}
+
+func (m *Entity) GetX() int32 {
+	if m != nil {
+		return m.X
+	}
+	return 0
+}
+
+func (m *Entity) GetY() int32 {
+	if m != nil {
+		return m.Y
+	}
+	return 0
+}
+
+func (m *Entity) GetTheta() int32 {
+	if m != nil {
+		return m.Theta
+	}
+	return 0
+}
+
+type ActionRequest struct {
+	Entity               *Entity              `protobuf:"bytes,1,opt,name=entity,proto3" json:"entity,omitempty"`
+	Action               ActionRequest_Action `protobuf:"varint,2,opt,name=action,proto3,enum=web.ActionRequest_Action" json:"action,omitempty"`
+	XXX_NoUnkeyedLiteral struct{}             `json:"-"`
+	XXX_unrecognized     []byte               `json:"-"`
+	XXX_sizecache        int32                `json:"-"`
+}
+
+func (m *ActionRequest) Reset()         { *m = ActionRequest{} }
+func (m *ActionRequest) String() string { return proto.CompactTextString(m) }
+func (*ActionRequest) ProtoMessage()    {}
+func (*ActionRequest) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b59cb7d8fa836ac0, []int{2}
+}
+
+func (m *ActionRequest) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ActionRequest.Unmarshal(m, b)
+}
+func (m *ActionRequest) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ActionRequest.Marshal(b, m, deterministic)
+}
+func (m *ActionRequest) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ActionRequest.Merge(m, src)
+}
+func (m *ActionRequest) XXX_Size() int {
+	return xxx_messageInfo_ActionRequest.Size(m)
+}
+func (m *ActionRequest) XXX_DiscardUnknown() {
+	xxx_messageInfo_ActionRequest.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ActionRequest proto.InternalMessageInfo
+
+func (m *ActionRequest) GetEntity() *Entity {
+	if m != nil {
+		return m.Entity
+	}
+	return nil
+}
+
+func (m *ActionRequest) GetAction() ActionRequest_Action {
+	if m != nil {
+		return m.Action
+	}
+	return ActionRequest_Move
+}
+
+type ActionResponse struct {
+	Entity               *Entity  `protobuf:"bytes,1,opt,name=entity,proto3" json:"entity,omitempty"`
+	XXX_NoUnkeyedLiteral struct{} `json:"-"`
+	XXX_unrecognized     []byte   `json:"-"`
+	XXX_sizecache        int32    `json:"-"`
+}
+
+func (m *ActionResponse) Reset()         { *m = ActionResponse{} }
+func (m *ActionResponse) String() string { return proto.CompactTextString(m) }
+func (*ActionResponse) ProtoMessage()    {}
+func (*ActionResponse) Descriptor() ([]byte, []int) {
+	return fileDescriptor_b59cb7d8fa836ac0, []int{3}
+}
+
+func (m *ActionResponse) XXX_Unmarshal(b []byte) error {
+	return xxx_messageInfo_ActionResponse.Unmarshal(m, b)
+}
+func (m *ActionResponse) XXX_Marshal(b []byte, deterministic bool) ([]byte, error) {
+	return xxx_messageInfo_ActionResponse.Marshal(b, m, deterministic)
+}
+func (m *ActionResponse) XXX_Merge(src proto.Message) {
+	xxx_messageInfo_ActionResponse.Merge(m, src)
+}
+func (m *ActionResponse) XXX_Size() int {
+	return xxx_messageInfo_ActionResponse.Size(m)
+}
+func (m *ActionResponse) XXX_DiscardUnknown() {
+	xxx_messageInfo_ActionResponse.DiscardUnknown(m)
+}
+
+var xxx_messageInfo_ActionResponse proto.InternalMessageInfo
+
+func (m *ActionResponse) GetEntity() *Entity {
+	if m != nil {
+		return m.Entity
+	}
+	return nil
+}
+
 type Empty struct {
 	XXX_NoUnkeyedLiteral struct{} `json:"-"`
 	XXX_unrecognized     []byte   `json:"-"`
@@ -73,7 +244,7 @@ func (m *Empty) Reset()         { *m = Empty{} }
 func (m *Empty) String() string { return proto.CompactTextString(m) }
 func (*Empty) ProtoMessage()    {}
 func (*Empty) Descriptor() ([]byte, []int) {
-	return fileDescriptor_b59cb7d8fa836ac0, []int{1}
+	return fileDescriptor_b59cb7d8fa836ac0, []int{4}
 }
 
 func (m *Empty) XXX_Unmarshal(b []byte) error {
@@ -107,7 +278,7 @@ func (m *WorldResponse) Reset()         { *m = WorldResponse{} }
 func (m *WorldResponse) String() string { return proto.CompactTextString(m) }
 func (*WorldResponse) ProtoMessage()    {}
 func (*WorldResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_b59cb7d8fa836ac0, []int{2}
+	return fileDescriptor_b59cb7d8fa836ac0, []int{5}
 }
 
 func (m *WorldResponse) XXX_Unmarshal(b []byte) error {
@@ -160,7 +331,7 @@ func (m *EntityResponse) Reset()         { *m = EntityResponse{} }
 func (m *EntityResponse) String() string { return proto.CompactTextString(m) }
 func (*EntityResponse) ProtoMessage()    {}
 func (*EntityResponse) Descriptor() ([]byte, []int) {
-	return fileDescriptor_b59cb7d8fa836ac0, []int{3}
+	return fileDescriptor_b59cb7d8fa836ac0, []int{6}
 }
 
 func (m *EntityResponse) XXX_Unmarshal(b []byte) error {
@@ -189,7 +360,11 @@ func (m *EntityResponse) GetPayload() []byte {
 }
 
 func init() {
+	proto.RegisterEnum("web.ActionRequest_Action", ActionRequest_Action_name, ActionRequest_Action_value)
 	proto.RegisterType((*PlayerID)(nil), "web.PlayerID")
+	proto.RegisterType((*Entity)(nil), "web.Entity")
+	proto.RegisterType((*ActionRequest)(nil), "web.ActionRequest")
+	proto.RegisterType((*ActionResponse)(nil), "web.ActionResponse")
 	proto.RegisterType((*Empty)(nil), "web.Empty")
 	proto.RegisterType((*WorldResponse)(nil), "web.WorldResponse")
 	proto.RegisterType((*EntityResponse)(nil), "web.EntityResponse")
@@ -198,25 +373,33 @@ func init() {
 func init() { proto.RegisterFile("proto/remote.proto", fileDescriptor_b59cb7d8fa836ac0) }
 
 var fileDescriptor_b59cb7d8fa836ac0 = []byte{
-	// 284 bytes of a gzipped FileDescriptorProto
-	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x54, 0x90, 0xc1, 0x6a, 0x83, 0x40,
-	0x10, 0x86, 0x63, 0x42, 0x92, 0x66, 0x48, 0x72, 0xd8, 0x96, 0x22, 0x39, 0x85, 0x3d, 0x49, 0x0f,
-	0x2a, 0xc9, 0xb1, 0xb7, 0x60, 0x0e, 0x5e, 0x4a, 0x31, 0x87, 0x42, 0x6f, 0xab, 0x0e, 0x2a, 0x51,
-	0x77, 0xbb, 0x4e, 0x2a, 0xbe, 0x4a, 0x9f, 0xb6, 0x74, 0x35, 0x05, 0x6f, 0xff, 0x37, 0xcc, 0x0e,
-	0xdf, 0xbf, 0xc0, 0x94, 0x96, 0x24, 0x3d, 0x8d, 0x95, 0x24, 0x74, 0x0d, 0xb0, 0x59, 0x8b, 0x31,
-	0xdf, 0xc1, 0xc3, 0x7b, 0x29, 0x3a, 0xd4, 0x61, 0xc0, 0xb6, 0x30, 0x0d, 0x03, 0xdb, 0xda, 0x5b,
-	0xce, 0x2a, 0x9a, 0x86, 0x01, 0x5f, 0xc2, 0xfc, 0x5c, 0x29, 0xea, 0xf8, 0x05, 0x36, 0x1f, 0x52,
-	0x97, 0x69, 0x84, 0x8d, 0x92, 0x75, 0x83, 0xec, 0x09, 0xe6, 0x54, 0x94, 0xd8, 0x98, 0xe5, 0x75,
-	0xd4, 0xc3, 0xdf, 0xb4, 0x2d, 0x52, 0xca, 0xed, 0xe9, 0xde, 0x72, 0xe6, 0x51, 0x0f, 0xec, 0x19,
-	0x16, 0x39, 0x16, 0x59, 0x4e, 0xf6, 0xcc, 0x8c, 0x07, 0xe2, 0x2f, 0xb0, 0x3d, 0xd7, 0x54, 0x50,
-	0xf7, 0x7f, 0xd5, 0x86, 0xa5, 0x12, 0x5d, 0x29, 0x45, 0x3a, 0xdc, 0xbd, 0xe3, 0xe1, 0xc7, 0x82,
-	0xe5, 0x49, 0x24, 0x57, 0xac, 0x53, 0xe6, 0xc0, 0xea, 0x0d, 0xdb, 0x5e, 0x9a, 0x81, 0xdb, 0x62,
-	0xec, 0x1a, 0xcb, 0xdd, 0xc6, 0xe4, 0x7b, 0x1b, 0x3e, 0x61, 0x3e, 0xac, 0x07, 0xed, 0xaf, 0x1b,
-	0x36, 0x34, 0x5a, 0x66, 0x26, 0x8f, 0x5a, 0xf1, 0x09, 0x3b, 0xc2, 0xba, 0x77, 0xba, 0x90, 0x46,
-	0x51, 0x8d, 0x5e, 0x3c, 0xf6, 0x79, 0xa4, 0xcc, 0x27, 0xbe, 0x75, 0x3a, 0x7c, 0xfa, 0x59, 0x41,
-	0xf9, 0x2d, 0x76, 0x13, 0x59, 0x79, 0xd7, 0x0e, 0x91, 0xc8, 0xcb, 0x44, 0x85, 0x0d, 0xea, 0x6f,
-	0xd4, 0x5e, 0xa6, 0x55, 0x32, 0x44, 0xf3, 0xf1, 0xaf, 0x2a, 0x8e, 0x17, 0x26, 0x1d, 0x7f, 0x03,
-	0x00, 0x00, 0xff, 0xff, 0x67, 0x4a, 0x62, 0x96, 0x98, 0x01, 0x00, 0x00,
+	// 411 bytes of a gzipped FileDescriptorProto
+	0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0xff, 0x8c, 0x52, 0xc1, 0x6e, 0xd3, 0x40,
+	0x10, 0x8d, 0xd3, 0xc6, 0x69, 0xa7, 0x49, 0x84, 0xa6, 0x15, 0x32, 0x39, 0x55, 0xcb, 0x25, 0xaa,
+	0x90, 0x5d, 0x52, 0x71, 0x81, 0x13, 0x55, 0x7a, 0x08, 0x12, 0xa8, 0x72, 0x91, 0x68, 0xb9, 0xad,
+	0xed, 0xc1, 0xb6, 0x6a, 0x7b, 0xcd, 0x7a, 0x5b, 0xcb, 0xe2, 0x3f, 0xf9, 0x1e, 0x94, 0xdd, 0x75,
+	0x55, 0xc3, 0x85, 0xdb, 0xbe, 0xd9, 0x7d, 0xef, 0xcd, 0xbc, 0x59, 0xc0, 0x5a, 0x0a, 0x25, 0x02,
+	0x49, 0xa5, 0x50, 0xe4, 0x6b, 0x80, 0x7b, 0x2d, 0x45, 0x6c, 0x09, 0x07, 0xd7, 0x05, 0xef, 0x48,
+	0x6e, 0x37, 0xb8, 0x80, 0xf1, 0x76, 0xe3, 0x39, 0xa7, 0xce, 0xea, 0x30, 0x1c, 0x6f, 0x37, 0xec,
+	0x13, 0xb8, 0x57, 0x95, 0xca, 0x55, 0xf7, 0xf7, 0x0d, 0xce, 0xc0, 0xb9, 0xf5, 0xc6, 0xa7, 0xce,
+	0x6a, 0x12, 0x3a, 0xb7, 0x3b, 0x74, 0xe7, 0xed, 0x19, 0x74, 0x87, 0x27, 0x30, 0xf9, 0x9a, 0x91,
+	0xe2, 0xde, 0xbe, 0xae, 0x18, 0xc0, 0x7e, 0xc1, 0xfc, 0x63, 0xac, 0x72, 0x51, 0x85, 0xf4, 0xf3,
+	0x81, 0x1a, 0x85, 0xaf, 0xc1, 0x25, 0x2d, 0xae, 0x65, 0x8f, 0xd6, 0x47, 0x7e, 0x4b, 0x91, 0x6f,
+	0xfc, 0x42, 0x7b, 0x85, 0x6f, 0xc1, 0xe5, 0x9a, 0xa5, 0xcd, 0x16, 0xeb, 0x57, 0xfa, 0xd1, 0x40,
+	0xa8, 0x47, 0xf6, 0x21, 0x43, 0x70, 0x4d, 0x05, 0x0f, 0x60, 0xff, 0xb3, 0x78, 0xa4, 0x17, 0x23,
+	0xf6, 0x0e, 0x16, 0x3d, 0xa7, 0xa9, 0x45, 0xd5, 0xd0, 0x7f, 0xb9, 0xb3, 0x29, 0x4c, 0xae, 0xca,
+	0x5a, 0x75, 0xec, 0x06, 0xe6, 0xdf, 0x84, 0x2c, 0x92, 0x27, 0xfa, 0x09, 0x4c, 0x54, 0x5e, 0x50,
+	0xa3, 0xd9, 0xb3, 0xd0, 0x80, 0x5d, 0xb5, 0xcd, 0x13, 0x95, 0xd9, 0x64, 0x0c, 0xc0, 0x97, 0xe0,
+	0x66, 0x94, 0xa7, 0x99, 0xb2, 0x11, 0x59, 0xc4, 0xce, 0x60, 0x61, 0xfd, 0x7a, 0x55, 0x0f, 0xa6,
+	0x35, 0xef, 0x0a, 0xc1, 0x13, 0xab, 0xdb, 0xc3, 0xf5, 0x6f, 0x07, 0xa6, 0x97, 0x3c, 0xbe, 0xa7,
+	0x2a, 0xc1, 0x15, 0x1c, 0x7e, 0xa1, 0xd6, 0x2c, 0x0d, 0xc1, 0xf4, 0xbd, 0xeb, 0x72, 0x39, 0xd7,
+	0xe7, 0x7e, 0x9b, 0x6c, 0x84, 0xef, 0x61, 0x7e, 0x4d, 0xf2, 0x87, 0x90, 0xa5, 0x4d, 0x04, 0xff,
+	0x8d, 0x6f, 0x79, 0x3c, 0xa8, 0x99, 0x4e, 0xd8, 0x08, 0xcf, 0x61, 0x66, 0x47, 0x36, 0xeb, 0x7a,
+	0x6e, 0x64, 0x64, 0x06, 0x89, 0xb0, 0x11, 0x5e, 0xc0, 0xcc, 0xcc, 0x73, 0xa3, 0x24, 0xf1, 0x72,
+	0xc0, 0x38, 0x7e, 0x1e, 0xef, 0x13, 0xe5, 0xdc, 0xb9, 0x7c, 0xf3, 0xfd, 0x2c, 0xcd, 0x55, 0xf6,
+	0x10, 0xf9, 0xb1, 0x28, 0x83, 0xfb, 0x8e, 0x48, 0xa9, 0x20, 0xe5, 0x25, 0x35, 0x24, 0x1f, 0x49,
+	0x06, 0xa9, 0xac, 0xe3, 0x40, 0x7f, 0xd7, 0x0f, 0x75, 0x14, 0xb9, 0xfa, 0x74, 0xf1, 0x27, 0x00,
+	0x00, 0xff, 0xff, 0x42, 0x63, 0x21, 0x96, 0xce, 0x02, 0x00, 0x00,
 }
 
 // Reference imports to suppress errors if they are not otherwise used.
@@ -232,7 +415,7 @@ const _ = grpc.SupportPackageIsVersion4
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://godoc.org/google.golang.org/grpc#ClientConn.NewStream.
 type BackendClient interface {
 	NewPlayer(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*PlayerID, error)
-	// rpc PerformAction(ActionRequest) returns (ActionRequest) {}
+	PerformAction(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*ActionResponse, error)
 	WorldRequest(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*WorldResponse, error)
 	EntityStream(ctx context.Context, in *Empty, opts ...grpc.CallOption) (Backend_EntityStreamClient, error)
 }
@@ -248,6 +431,15 @@ func NewBackendClient(cc *grpc.ClientConn) BackendClient {
 func (c *backendClient) NewPlayer(ctx context.Context, in *Empty, opts ...grpc.CallOption) (*PlayerID, error) {
 	out := new(PlayerID)
 	err := c.cc.Invoke(ctx, "/web.Backend/NewPlayer", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *backendClient) PerformAction(ctx context.Context, in *ActionRequest, opts ...grpc.CallOption) (*ActionResponse, error) {
+	out := new(ActionResponse)
+	err := c.cc.Invoke(ctx, "/web.Backend/PerformAction", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -298,7 +490,7 @@ func (x *backendEntityStreamClient) Recv() (*EntityResponse, error) {
 // BackendServer is the server API for Backend service.
 type BackendServer interface {
 	NewPlayer(context.Context, *Empty) (*PlayerID, error)
-	// rpc PerformAction(ActionRequest) returns (ActionRequest) {}
+	PerformAction(context.Context, *ActionRequest) (*ActionResponse, error)
 	WorldRequest(context.Context, *Empty) (*WorldResponse, error)
 	EntityStream(*Empty, Backend_EntityStreamServer) error
 }
@@ -321,6 +513,24 @@ func _Backend_NewPlayer_Handler(srv interface{}, ctx context.Context, dec func(i
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
 		return srv.(BackendServer).NewPlayer(ctx, req.(*Empty))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _Backend_PerformAction_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ActionRequest)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(BackendServer).PerformAction(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/web.Backend/PerformAction",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(BackendServer).PerformAction(ctx, req.(*ActionRequest))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -371,6 +581,10 @@ var _Backend_serviceDesc = grpc.ServiceDesc{
 		{
 			MethodName: "NewPlayer",
 			Handler:    _Backend_NewPlayer_Handler,
+		},
+		{
+			MethodName: "PerformAction",
+			Handler:    _Backend_PerformAction_Handler,
 		},
 		{
 			MethodName: "WorldRequest",

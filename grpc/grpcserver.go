@@ -2,11 +2,15 @@ package grpc
 
 import (
 	"context"
+	"fmt"
 	"log"
 	"net"
+	"sync"
 	"time"
 
+	"github.com/kyeett/gameserver/entity"
 	"github.com/kyeett/gameserver/localserver"
+	"github.com/kyeett/gameserver/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
@@ -17,6 +21,7 @@ var _ pb.BackendServer = (*GrpcServer)(nil)
 
 type GrpcServer struct {
 	local *localserver.LocalServer
+	mu    *sync.RWMutex
 }
 
 func NewServer() (*GrpcServer, error) {
@@ -24,6 +29,7 @@ func NewServer() (*GrpcServer, error) {
 
 	return &GrpcServer{
 		l,
+		&sync.RWMutex{},
 	}, nil
 }
 
@@ -44,6 +50,8 @@ func (s *GrpcServer) Run() {
 }
 
 func (s *GrpcServer) NewPlayer(ctx context.Context, _ *pb.Empty) (*pb.PlayerID, error) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	p, err := s.local.NewPlayer()
 	if err != nil {
 		return nil, err
@@ -65,13 +73,15 @@ func (s *GrpcServer) WorldRequest(ctx context.Context, _ *pb.Empty) (*pb.WorldRe
 func (s *GrpcServer) EntityStream(_ *pb.Empty, stream pb.Backend_EntityStreamServer) error {
 
 	i := 0
-	ticker := time.NewTicker(10 * time.Millisecond)
+	ticker := time.NewTicker(20 * time.Millisecond)
 	for {
 		i++
 		<-ticker.C
 
+		s.mu.Lock()
 		e := s.local.Entities()
 		payload, err := GobMarshal(&e)
+		s.mu.Unlock()
 		if err != nil {
 			return err
 		}
@@ -80,4 +90,28 @@ func (s *GrpcServer) EntityStream(_ *pb.Empty, stream pb.Backend_EntityStreamSer
 			Payload: payload,
 		})
 	}
+}
+
+//Todo: refactor this code.
+func (s *GrpcServer) PerformAction(ctx context.Context, req *pb.ActionRequest) (*pb.ActionResponse, error) {
+	fmt.Println("Perform action server", req.GetEntity())
+	tmpEntity := req.GetEntity()
+
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	e, err := s.local.PerformAction(entity.Entity{ID: tmpEntity.GetID()},
+		types.Position{
+			Coord: types.Coord{X: int(tmpEntity.GetX()), Y: int(tmpEntity.GetY())},
+			Theta: int(tmpEntity.GetTheta())})
+	if err != nil {
+		return nil, err
+	}
+	ent := pb.Entity{
+		ID:    e.ID,
+		X:     int32(e.Position.X),
+		Y:     int32(e.Position.Y),
+		Theta: int32(e.Position.Theta),
+	}
+	fmt.Println(ent)
+	return &pb.ActionResponse{Entity: &ent}, nil
 }

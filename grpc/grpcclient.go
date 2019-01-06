@@ -5,7 +5,8 @@ import (
 	"fmt"
 	"io"
 	"log"
-	"math/rand"
+	"sync"
+	"time"
 
 	"google.golang.org/grpc"
 
@@ -22,6 +23,7 @@ type GrpcClient struct {
 	world    types.World
 	entities []entity.Entity
 	client   pb.BackendClient
+	mu       *sync.RWMutex
 }
 
 func NewClient() (gameserver.GameServer, error) {
@@ -48,6 +50,7 @@ func NewClient() (gameserver.GameServer, error) {
 		client:   client,
 		world:    w,
 		entities: []entity.Entity{},
+		mu:       &sync.RWMutex{},
 	}
 
 	go c.recieveEntityUpdates()
@@ -65,7 +68,6 @@ func (s *GrpcClient) recieveEntityUpdates() {
 
 	for {
 		resp, err := stream.Recv()
-		fmt.Println("Received update")
 		if err == io.EOF {
 			break
 		}
@@ -79,12 +81,37 @@ func (s *GrpcClient) recieveEntityUpdates() {
 			log.Fatal(err)
 		}
 
+		s.mu.Lock()
 		s.entities = entities
+		s.mu.Unlock()
 	}
 }
 
 func (s *GrpcClient) PerformAction(e entity.Entity, p types.Position) (entity.Entity, error) {
-	return e, nil
+	ent := pb.Entity{
+		ID:    e.ID,
+		X:     int32(p.X),
+		Y:     int32(p.Y),
+		Theta: int32(p.Theta),
+	}
+	fmt.Println("Perform action client", e)
+	fmt.Println("Perform action client", ent)
+
+	resp, err := s.client.PerformAction(context.Background(), &pb.ActionRequest{Entity: &ent})
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(resp)
+
+	return entity.Entity{
+		ID: resp.Entity.GetID(),
+		Position: types.Position{
+			types.Coord{int(resp.Entity.GetX()),
+				int(resp.Entity.GetY())},
+			int(resp.Entity.GetTheta()),
+		},
+		Owner: "",
+	}, nil
 }
 
 func (s *GrpcClient) NewPlayer() (entity.Entity, error) {
@@ -92,16 +119,34 @@ func (s *GrpcClient) NewPlayer() (entity.Entity, error) {
 	if err != nil {
 		return entity.Entity{}, err
 	}
-	e := entity.Entity{
-		resp.GetID(),
-		entity.Character,
-		types.Position{types.Coord{rand.Intn(3), rand.Intn(3)}, 0},
-		"",
+
+	// Wait until the new player is available
+	ticker := time.NewTicker(20 * time.Millisecond)
+	for {
+
+		s.mu.RLock()
+		for _, e := range s.entities {
+			if resp.GetID() == e.ID {
+				return e, nil
+			}
+		}
+		s.mu.RUnlock()
+		<-ticker.C
 	}
-	return e, nil
+
+	// e := entity.Entity{
+	// 	resp.GetID(),
+	// 	entity.Character,
+	// 	types.Position{types.Coord{rand.Intn(3), rand.Intn(3)}, 0},
+	// 	"",
+	// }
+	// s.world
+	// return e, nil
 }
 
 func (s *GrpcClient) Entities() []entity.Entity {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	return s.entities
 }
 
