@@ -3,10 +3,11 @@ package localserver
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"fmt"
-	"log"
+	"errors"
 	"math/rand"
 	"strconv"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/kyeett/gameserver"
 	"github.com/kyeett/gameserver/entity"
@@ -21,14 +22,14 @@ type LocalServer struct {
 	entities []entity.Entity
 }
 
-func New() gameserver.GameServer {
+func New(world types.World) gameserver.GameServer {
 	entities := []entity.Entity{
 		entity.Entity{ID: newID(), Type: entity.Coin, Position: types.Position{types.Coord{2, 1}, 0}, Owner: ""},
 		entity.Entity{ID: newID(), Type: entity.Coin, Position: types.Position{types.Coord{8, 2}, 0}, Owner: ""},
 	}
 
 	return &LocalServer{
-		world:    types.FirstWorld,
+		world:    world,
 		entities: entities,
 	}
 }
@@ -44,7 +45,7 @@ func (s *LocalServer) NewPlayer() (entity.Entity, error) {
 	}
 
 	s.entities = append(s.entities, e)
-	fmt.Println(s.entities)
+	log.Infof("New player with ID: %s joined", e.ID)
 	return e, nil
 }
 
@@ -57,28 +58,32 @@ func (s *LocalServer) World() types.World {
 }
 
 func (s *LocalServer) checkCollisions(p entity.Entity) {
-
+	log.Debug("check for collisions")
 	// Check for collisions
 	for i, e := range s.entities {
 		if p != e && p.Position.Coord == e.Position.Coord {
-			fmt.Println(p, "destroy", e)
+			log.Info("Object ", p, "destroys", e)
 			s.entities[i] = e.Destroy(p.ID)
 		}
 	}
 }
 
 func (s *LocalServer) PerformAction(e entity.Entity, p types.Position) (entity.Entity, error) {
-	fmt.Println("Perform action", e, p)
-	e = s.moveTo(e, p)
-	fmt.Println("Performed action", e)
+
+	log.Info("Perform action", e, p)
+	e, err := s.moveTo(e, p)
+	if err != nil {
+		return e, err
+	}
+
 	s.checkCollisions(e)
 	return e, nil
 }
 
 // Todo: design the rules for entity interaction a bit better
-func (s *LocalServer) moveTo(a entity.Entity, c types.Position) entity.Entity {
+func (s *LocalServer) moveTo(a entity.Entity, c types.Position) (entity.Entity, error) {
 	if s.world.ValidTarget(c) == false {
-		return a
+		return entity.Entity{}, errors.New("invalid move")
 	}
 
 	var found = -1
@@ -102,7 +107,7 @@ func (s *LocalServer) moveTo(a entity.Entity, c types.Position) entity.Entity {
 		s.entities[found].Position = c
 	}
 
-	return s.entities[found]
+	return s.entities[found], nil
 }
 
 func newID() string {

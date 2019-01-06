@@ -42,22 +42,6 @@ type World struct {
 	Width, Height int
 }
 
-var FirstWorld = World{
-	[]Tile{
-		Water, Water, Water, Water, Water, Water, Water, Water, Water, Water,
-		Water, Grass, Grass, Grass, Water, Water, Grass, Grass, Water, Water,
-		Water, Grass, Grass, Grass, Grass, Water, Water, Grass, Grass, Water,
-		Water, Grass, Grass, Grass, Grass, Grass, Water, Grass, Grass, Water,
-		Water, Water, Water, Water, Grass, Grass, Water, Grass, Grass, Water,
-		Water, Water, Grass, Grass, Grass, Water, Water, Grass, Grass, Water,
-		Water, Grass, Grass, Grass, Water, Water, Grass, Grass, Grass, Water,
-		Water, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Water,
-		Water, Water, Grass, Grass, Grass, Grass, Grass, Grass, Grass, Water,
-		Water, Water, Water, Water, Water, Water, Water, Water, Water, Water,
-	},
-	10, 10,
-}
-
 func (w World) TileBytes() []byte {
 	var bs []byte
 	for _, t := range w.tiles {

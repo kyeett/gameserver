@@ -2,11 +2,11 @@ package grpc
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"net"
 	"sync"
 	"time"
+
+	log "github.com/sirupsen/logrus"
 
 	"github.com/kyeett/gameserver/entity"
 	"github.com/kyeett/gameserver/localserver"
@@ -24,8 +24,9 @@ type GrpcServer struct {
 	mu    *sync.RWMutex
 }
 
-func NewServer() (*GrpcServer, error) {
-	l := localserver.New().(*localserver.LocalServer)
+func NewServer(w types.World) (*GrpcServer, error) {
+	log.Info("new remote server created")
+	l := localserver.New(w).(*localserver.LocalServer)
 
 	return &GrpcServer{
 		l,
@@ -34,7 +35,8 @@ func NewServer() (*GrpcServer, error) {
 }
 
 // Todo clean up
-func (s *GrpcServer) Run() {
+func (s *GrpcServer) Run(ctx context.Context) {
+
 	port := ":10001"
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
@@ -44,6 +46,13 @@ func (s *GrpcServer) Run() {
 	pb.RegisterBackendServer(ss, s)
 	// Register reflection service on gRPC server.
 	reflection.Register(ss)
+
+	go func() {
+		<-ctx.Done()
+		ss.GracefulStop()
+	}()
+
+	log.Infof("starting server at %s", port)
 	if err := ss.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
@@ -75,6 +84,7 @@ func (s *GrpcServer) EntityStream(_ *pb.Empty, stream pb.Backend_EntityStreamSer
 	i := 0
 	ticker := time.NewTicker(20 * time.Millisecond)
 	for {
+		// log.Debug("push entities")
 		i++
 		<-ticker.C
 
@@ -94,7 +104,6 @@ func (s *GrpcServer) EntityStream(_ *pb.Empty, stream pb.Backend_EntityStreamSer
 
 //Todo: refactor this code.
 func (s *GrpcServer) PerformAction(ctx context.Context, req *pb.ActionRequest) (*pb.ActionResponse, error) {
-	fmt.Println("Perform action server", req.GetEntity())
 	tmpEntity := req.GetEntity()
 
 	s.mu.Lock()
@@ -112,6 +121,5 @@ func (s *GrpcServer) PerformAction(ctx context.Context, req *pb.ActionRequest) (
 		Y:     int32(e.Position.Y),
 		Theta: int32(e.Position.Theta),
 	}
-	fmt.Println(ent)
 	return &pb.ActionResponse{Entity: &ent}, nil
 }
