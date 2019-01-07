@@ -52,20 +52,19 @@ func New(opt ...Option) (*Game, error) {
 		ctx:  context.Background(),
 		opts: defaultGameOptions,
 	}
-	opts := defaultGameOptions
 	for _, o := range opt {
-		err := o(&opts)
+		err := o(&g.opts)
 		if err != nil {
 			return nil, err
 		}
 	}
 
-	err := opts.startDevServer(g)
+	err := g.opts.startDevServer(g)
 	if err != nil {
 		return nil, err
 	}
 
-	err = opts.initiateStateFunc(g)
+	err = g.opts.initiateStateFunc(g)
 	if err != nil {
 		return nil, err
 	}
@@ -99,6 +98,7 @@ func RemoteState(addr string, secure bool) Option {
 	return func(o *options) error {
 		log.Debugf("Configure state server to: remote\n")
 		o.initiateStateFunc = func(g *Game) error {
+			// serverAddr := fmt.Sprintf("localhost:%d", defaultPort)
 			serverAddr := addr
 			s, err := grpc.NewClient(serverAddr, secure)
 			if err != nil {
