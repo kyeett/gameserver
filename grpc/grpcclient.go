@@ -12,9 +12,10 @@ import (
 
 	"github.com/kyeett/gameserver"
 	"github.com/kyeett/gameserver/entity"
-	pb "github.com/kyeett/gameserver/proto"
 
 	"github.com/kyeett/gameserver/types"
+
+	pb "github.com/kyeett/gameserver/proto"
 )
 
 // Ensure struct implements interface

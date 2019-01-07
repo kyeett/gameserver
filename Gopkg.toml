@@ -24,14 +24,16 @@
 #   go-tests = true
 #   unused-packages = true
 
+required = [
+  "github.com/golang/protobuf/protoc-gen-go",
+  "github.com/johanbrandhorst/protobuf/protoc-gen-gopherjs",
+  "github.com/foobaz/go-zopfli",
+  "github.com/gopherjs/gopherjs",
+]
 
-[[constraint]]
-  name = "github.com/golang/protobuf"
-  version = "1.2.0"
-
-[[constraint]]
-  branch = "master"
-  name = "github.com/kyeett/grpc-experiments"
+# [[constraint]]
+#   name = "github.com/golang/protobuf"
+#   version = "1.2.0"
 
 [[constraint]]
   name = "github.com/onrik/logrus"
@@ -61,10 +63,18 @@
   go-tests = true
   unused-packages = true
 
-[[constraint]]
-  name = "github.com/johanbrandhorst/protobuf"
-  version = "0.7.1"
 
 [[constraint]]
   branch = "master"
   name = "github.com/gopherjs/gopherjs"
+
+
+# Copied from grpcweb-boilerplate
+[[constraint]]
+  name = "github.com/johanbrandhorst/protobuf"
+  version = "0.6.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/improbable-eng/grpc-web"
+
