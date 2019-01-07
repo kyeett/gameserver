@@ -3,7 +3,13 @@
 package grpc
 
 import (
+	"context"
+	"sync"
+
+	"github.com/golang/protobuf/ptypes/empty"
+	"github.com/kyeett/gameserver/entity"
 	pb "github.com/kyeett/gameserver/proto"
+	"github.com/kyeett/gameserver/types"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
@@ -11,6 +17,15 @@ import (
 )
 
 var cert = "../cert.pem"
+
+type GrpcClient struct {
+	world     types.World
+	entities  []entity.Entity
+	client    pb.BackendClient
+	mu        *sync.RWMutex
+	once      sync.Once
+	startedCh chan struct{} // Todo, better method for knowing if started?
+}
 
 func CorrectClient(serverAddr string, secure bool) (pb.BackendClient, error) {
 
@@ -34,4 +49,34 @@ func CorrectClient(serverAddr string, secure bool) (pb.BackendClient, error) {
 	}
 
 	return pb.NewBackendClient(conn), nil
+}
+
+func getEmpty() *empty.Empty {
+	return &empty.Empty{}
+}
+
+//Todo: make common between jsclient and nativeclient
+func (s *GrpcClient) PerformAction(e entity.Entity, p types.Position) (entity.Entity, error) {
+	log.Debugf("%s, perform action", e.ID)
+	ent := pb.Entity{
+		ID:    e.ID,
+		X:     int32(p.X),
+		Y:     int32(p.Y),
+		Theta: int32(p.Theta),
+	}
+
+	resp, err := s.client.PerformAction(context.Background(), &pb.ActionRequest{Entity: &ent})
+	if err != nil {
+		return entity.Entity{}, err
+	}
+
+	return entity.Entity{
+		ID: resp.Entity.GetID(),
+		Position: types.Position{
+			types.Coord{int(resp.Entity.GetX()),
+				int(resp.Entity.GetY())},
+			int(resp.Entity.GetTheta()),
+		},
+		Owner: "",
+	}, nil
 }

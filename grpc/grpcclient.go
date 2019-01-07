@@ -6,7 +6,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 
@@ -14,21 +13,10 @@ import (
 	"github.com/kyeett/gameserver/entity"
 
 	"github.com/kyeett/gameserver/types"
-
-	pb "github.com/kyeett/gameserver/proto"
 )
 
 // Ensure struct implements interface
 var _ gameserver.GameServer = (*GrpcClient)(nil)
-
-type GrpcClient struct {
-	world     types.World
-	entities  []entity.Entity
-	client    pb.BackendClient
-	mu        *sync.RWMutex
-	once      sync.Once
-	startedCh chan struct{} // Todo, better method for knowing if started?
-}
 
 func NewClient(serverAddr string, secure bool) (gameserver.GameServer, error) {
 	log.SetLevel(log.DebugLevel)
@@ -39,7 +27,8 @@ func NewClient(serverAddr string, secure bool) (gameserver.GameServer, error) {
 	if err != nil {
 		return nil, errors.Wrap(err, "failed to create client")
 	}
-	resp, err := client.WorldRequest(ctx, &empty.Empty{}) // grpc.WaitForReady(true)
+
+	resp, err := client.WorldRequest(ctx, getEmpty()) // grpc.WaitForReady(true)
 	if err != nil {
 		log.Debugf("client failed to connect to %s\ndebug: %s", serverAddr, err)
 		return nil, errors.Errorf("client failed to connect to %s", serverAddr)
@@ -68,7 +57,7 @@ func NewClient(serverAddr string, secure bool) (gameserver.GameServer, error) {
 
 func (s *GrpcClient) recieveEntityUpdates() {
 	log.Debug("start entity stream")
-	stream, err := s.client.EntityStream(context.Background(), &empty.Empty{})
+	stream, err := s.client.EntityStream(context.Background(), getEmpty())
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -98,36 +87,11 @@ func (s *GrpcClient) recieveEntityUpdates() {
 	}
 }
 
-func (s *GrpcClient) PerformAction(e entity.Entity, p types.Position) (entity.Entity, error) {
-	log.Debugf("%s, perform action", e.ID)
-	ent := pb.Entity{
-		ID:    e.ID,
-		X:     int32(p.X),
-		Y:     int32(p.Y),
-		Theta: int32(p.Theta),
-	}
-
-	resp, err := s.client.PerformAction(context.Background(), &pb.ActionRequest{Entity: &ent})
-	if err != nil {
-		return entity.Entity{}, err
-	}
-
-	return entity.Entity{
-		ID: resp.Entity.GetID(),
-		Position: types.Position{
-			types.Coord{int(resp.Entity.GetX()),
-				int(resp.Entity.GetY())},
-			int(resp.Entity.GetTheta()),
-		},
-		Owner: "",
-	}, nil
-}
-
 func (s *GrpcClient) NewPlayer() (entity.Entity, error) {
 	t := time.Now()
 	ctx, _ := context.WithTimeout(context.Background(), 1000*time.Millisecond)
 	log.Debug("created a new player in", time.Since(t))
-	resp, err := s.client.NewPlayer(ctx, &empty.Empty{})
+	resp, err := s.client.NewPlayer(ctx, getEmpty())
 	if err != nil {
 		return entity.Entity{}, err
 	}
