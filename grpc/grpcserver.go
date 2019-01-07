@@ -12,6 +12,7 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
+
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
@@ -40,7 +41,12 @@ func NewServer(w types.World) (*GrpcServer, error) {
 }
 
 // Todo clean up
-func (s *GrpcServer) Run(ctx context.Context, port string) {
+func (s *GrpcServer) Run(ctx context.Context, port string, secure bool) {
+	if secure {
+		s.RunWeb(ctx, port)
+		return
+	}
+
 	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
 	if err != nil {
 		log.Fatalf("failed to listen: %v", err)
@@ -61,24 +67,11 @@ func (s *GrpcServer) Run(ctx context.Context, port string) {
 }
 
 func (s *GrpcServer) RunWeb(ctx context.Context, port string) {
-	// lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
-	// if err != nil {
-	// 	log.Fatalf("failed to listen: %v", err)
-	// }
-	// pb.RegisterBackendServer(ss, s)
-	// // Register reflection service on gRPC server.
-	// reflection.Register(ss)
-
-	// go func() {
-	// 	<-ctx.Done()
-	// 	ss.GracefulStop()
-	// }()
-	// log.Infof("starting server at %s", port)
-	// if err := ss.Serve(lis); err != nil {
-	// 	log.Fatalf("failed to serve: %v", err)
-	// }
+	log.Infof("start a http server at %s", port)
 
 	ss := grpc.NewServer()
+	pb.RegisterBackendServer(ss, s)
+	fmt.Println(s.local.World())
 
 	wrappedServer := grpcweb.WrapServer(ss,
 		grpcweb.WithWebsockets(true),
@@ -94,7 +87,7 @@ func (s *GrpcServer) RunWeb(ctx context.Context, port string) {
 			wrappedServer.IsAcceptableGrpcCorsRequest(req),
 			websocket.IsWebSocketUpgrade(req),
 			strings.Contains(req.Header.Get("Content-Type"), "application/grpc"))
-		log.Println(req.URL)
+		log.Println(req.URL, ss.GetServiceInfo())
 		log.Println(req.ProtoMajor == 2, strings.Contains(req.Header.Get("Content-Type"), "application/grpc"),
 			websocket.IsWebSocketUpgrade(req))
 
@@ -107,9 +100,9 @@ func (s *GrpcServer) RunWeb(ctx context.Context, port string) {
 
 		log.Println(req.Header)
 
-		wrappedServer.ServeHTTP(resp, req)
 		if strings.Contains(req.Header.Get("Content-Type"), "application/grpc") || websocket.IsWebSocketUpgrade(req) {
 			log.Println("In here!")
+			wrappedServer.ServeHTTP(resp, req)
 		} else {
 			log.Println("Serve files!", req)
 		}
@@ -131,7 +124,9 @@ func (s *GrpcServer) RunWeb(ctx context.Context, port string) {
 		},
 	}
 
-	logger.Fatal(httpsSrv.ListenAndServeTLS("./cert.pem", "./key.pem"))
+	log.Infof("Starting server on %s\n", addr)
+	log.Fatal(httpsSrv.ListenAndServeTLS("../cert.pem", "../key.pem"))
+	// log.Fatal(httpsSrv.ListenAndServeTLS("./cert.pem", "./key.pem"))
 }
 
 func (s *GrpcServer) NewPlayer(ctx context.Context, _ *pb.Empty) (*pb.PlayerID, error) {
@@ -148,12 +143,14 @@ func (s *GrpcServer) NewPlayer(ctx context.Context, _ *pb.Empty) (*pb.PlayerID, 
 // Todo, decide format to send over wire
 func (s *GrpcServer) WorldRequest(ctx context.Context, _ *pb.Empty) (*pb.WorldResponse, error) {
 	log.Info("got WorldRequest from client")
+	log.Error(*s)
+	log.Error(s.local)
+	log.Info("got WorldRequest from client")
 	return &pb.WorldResponse{
 		Tiles:  s.local.World().TileBytes(),
 		Width:  int32(s.local.World().Width),
 		Height: int32(s.local.World().Height),
 	}, nil
-
 }
 func (s *GrpcServer) EntityStream(_ *pb.Empty, stream pb.Backend_EntityStreamServer) error {
 

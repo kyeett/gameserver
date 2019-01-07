@@ -11,8 +11,9 @@ import (
 )
 
 var (
-	defaultPort = "10001"
+	defaultPort = "10003"
 	defaultAddr = fmt.Sprintf("localhost:%s", defaultPort)
+	secure      = true
 )
 
 func Test_NewPlayers(t *testing.T) {
@@ -24,11 +25,15 @@ func Test_NewPlayers(t *testing.T) {
 	if err != nil {
 		t.Fatal("Server did not start properly", err)
 	}
-	go s.Run(ctx, defaultPort)
+	fmt.Println(s.local.World())
+	time.Sleep(1 * time.Millisecond)
+	go s.Run(ctx, defaultPort, secure)
+	fmt.Println(s.local.World())
+	time.Sleep(1 * time.Millisecond)
 
-	c, err := NewClient(defaultAddr)
+	c, err := NewClient(defaultAddr, secure)
 	if err != nil {
-		t.Fatal(err)
+		t.Fatal("new client", err)
 	}
 
 	// Save number of entitites before operations
@@ -41,14 +46,14 @@ func Test_NewPlayers(t *testing.T) {
 		go func() {
 
 			defer wg.Done()
-			testClient, err := NewClient(defaultAddr)
+			testClient, err := NewClient(defaultAddr, secure)
 			if err != nil {
-				t.Fatal(err)
+				t.Fatal("new client", err)
 			}
 
 			_, err = testClient.NewPlayer()
 			if err != nil {
-				t.Fatal(err)
+				t.Fatal("new player", err)
 			}
 
 			// Keep clients connected

@@ -1,6 +1,7 @@
 package game
 
 import (
+	"flag"
 	"strconv"
 	"testing"
 
@@ -16,11 +17,15 @@ var stateTypes = []struct {
 	{"local",
 		[]Option{}},
 	{"remote-state",
-		[]Option{RemoteState("localhost:10001"), DevServer("10001")}},
+		[]Option{RemoteState("localhost:10001", false), DevServer("10001", false)},
+	},
+	{"remote-state-secure",
+		[]Option{RemoteState("localhost:10002", true), DevServer("10002", true)},
+	},
 }
 
 func Test_NewPlayers(t *testing.T) {
-	nPlayers := 1 //
+	nPlayers := 10 //
 
 	log.SetLevel(log.DebugLevel)
 	for _, tc := range stateTypes {
@@ -50,34 +55,40 @@ func Test_NewPlayers(t *testing.T) {
 	}
 }
 
-func Test_StressTest(t *testing.T) {
+var stress = flag.Bool("stress", false, "run stress tests")
 
+func Test_StressTest(t *testing.T) {
+	if !*stress {
+		t.Skip("Stress test skipped, use -stress flag")
+	}
 	log.SetLevel(log.DebugLevel)
 
-	nGames := 100
-	for i := 0; i < nGames; i++ {
-		t.Run("remote-new-game", func(t *testing.T) {
-			t.Parallel()
-			p := freeTestPort(t)
-			opts := []Option{RemoteState("localhost:" + p), DevServer(p)}
-			g, err := New(opts...)
-			if err != nil {
-				t.Fatalf("creating game failed: %s\n", err)
-			}
-
-			e, err := g.NewPlayer()
-			if err != nil {
-				t.Fatal(p)
-			}
-
-			for m := 0; m < 100; m++ {
-				pos := types.Position{Coord: types.Coord{X: m%2 + 1, Y: m%2 + 1}, Theta: 3}
-				_, err := g.PerformAction(e, pos)
+	nGames := 10
+	for _, secure := range []bool{false, true} {
+		for i := 0; i < nGames; i++ {
+			t.Run("remote-new-game-secure:"+strconv.FormatBool(secure), func(t *testing.T) {
+				t.Parallel()
+				p := freeTestPort(t)
+				opts := []Option{RemoteState("localhost:"+p, secure), DevServer(p, secure)}
+				g, err := New(opts...)
 				if err != nil {
-					t.Fatal(err)
+					t.Fatalf("creating game failed: %s\n", err)
 				}
-			}
-		})
+
+				e, err := g.NewPlayer()
+				if err != nil {
+					t.Fatal(p)
+				}
+
+				for m := 0; m < 100; m++ {
+					pos := types.Position{Coord: types.Coord{X: m%2 + 1, Y: m%2 + 1}, Theta: 3}
+					_, err := g.PerformAction(e, pos)
+					if err != nil {
+						t.Fatal(err)
+					}
+				}
+			})
+		}
 	}
 }
 

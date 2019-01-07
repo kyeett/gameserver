@@ -7,8 +7,8 @@ import "github.com/johanbrandhorst/protobuf/proto/gopherjs.proto";
 
 // Define the package locations the generated files will go into
 
-option (gopherjs.gopherjs_package) = "github.com/kyeett/gameserver/proto/web;pbweb";
-option go_package = "github.com/kyeett/gameserver/proto;pb";
+option (gopherjs.gopherjs_package) = "github.com/kyeett/gameserver/proto/web";
+option go_package = "github.com/kyeett/gameserver/proto";
 
 // Backend defines the interface exposed by the backend.´j
 // TODO: Define functionality exposed by backend.

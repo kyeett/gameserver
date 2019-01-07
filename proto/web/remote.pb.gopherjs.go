@@ -2,7 +2,7 @@
 // source: proto/remote.proto
 
 /*
-	Package pbweb is a generated protocol buffer package.
+	Package web is a generated protocol buffer package.
 
 	Web exposes a backend server over gRPC.
 
@@ -18,7 +18,7 @@
 		WorldResponse
 		EntityResponse
 */
-package pbweb
+package web
 
 import jspb "github.com/johanbrandhorst/protobuf/jspb"
 

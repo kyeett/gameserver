@@ -9,6 +9,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials"
 
 	"github.com/kyeett/gameserver"
 	"github.com/kyeett/gameserver/entity"
@@ -30,20 +31,37 @@ type GrpcClient struct {
 	startedCh chan struct{} // Todo, better method for knowing if started?
 }
 
-func NewClient(serverAddr string) (gameserver.GameServer, error) {
+var cert = "../cert.pem"
+
+func NewClient(serverAddr string, secure bool) (gameserver.GameServer, error) {
 	log.SetLevel(log.DebugLevel)
 	ctx := context.Background() // Todo move this out
 	ctx, _ = context.WithTimeout(ctx, 2*time.Second)
 
-	conn, err := grpc.Dial(serverAddr, grpc.WithInsecure())
+	opts := []grpc.DialOption{}
+
+	switch secure {
+	case true:
+		creds, err := credentials.NewClientTLSFromFile(cert, "")
+		if err != nil {
+			return nil, errors.Wrapf(err, "could not load tls cert: %s", cert)
+		}
+		opts = append(opts, grpc.WithTransportCredentials(creds))
+	case false:
+		opts = append(opts, grpc.WithInsecure())
+	}
+	// opts = append(opts, grpc.WithInsecure())
+
+	log.Debugf("dialing to %s\n", serverAddr)
+	conn, err := grpc.Dial(serverAddr, opts...)
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "new client")
 	}
 
 	client := pb.NewBackendClient(conn)
 	resp, err := client.WorldRequest(ctx, &pb.Empty{}) // grpc.WaitForReady(true)
 	if err != nil {
-		log.Debug("client failed to connect to %sdebug:", err)
+		log.Debugf("client failed to connect to %s\ndebug: %s", serverAddr, err)
 		return nil, errors.Errorf("client failed to connect to %s", serverAddr)
 	}
 
