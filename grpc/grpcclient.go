@@ -39,8 +39,9 @@ func NewClient(serverAddr string) (gameserver.GameServer, error) {
 	if err != nil {
 		return nil, err
 	}
+
 	client := pb.NewBackendClient(conn)
-	resp, err := client.WorldRequest(ctx, &pb.Empty{}, grpc.WaitForReady(true))
+	resp, err := client.WorldRequest(ctx, &pb.Empty{}) // grpc.WaitForReady(true)
 	if err != nil {
 		log.Debug("client failed to connect to %sdebug:", err)
 		return nil, errors.Errorf("client failed to connect to %s", serverAddr)

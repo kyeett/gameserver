@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"flag"
 
 	log "github.com/sirupsen/logrus"
 
@@ -12,6 +13,10 @@ import (
 )
 
 func main() {
+	var port string
+	flag.StringVar(&port, "port", "10001", "port to serve on")
+	flag.Parse()
+
 	//Enable tracing
 	log.SetLevel(log.DebugLevel)
 	filenameHook := filename.NewHook()
@@ -22,6 +27,6 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	ss.Run(context.Background())
 
+	ss.RunWeb(context.Background(), port)
 }

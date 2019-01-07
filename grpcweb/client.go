@@ -37,14 +37,6 @@ func init() {
 
 // Setup is where we do the real work.
 func setup() {
-	// This is the address to the server, and should be used
-	// when creating clients.
-	// serverAddr := strings.TrimSuffix(document.BaseURI(), "/")
-
-	// log.Println(document.DocumentURI())
-	// u := document.DocumentURI()
-	// s, err := url.ParseQuery(u)
-	// log.Println(s, err)
 
 	u2, err := url.Parse(document.DocumentURI())
 	if err != nil {

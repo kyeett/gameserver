@@ -2,20 +2,24 @@ package grpc
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
 	"net"
+	"net/http"
+	"strings"
 	"sync"
 	"time"
 
+	"github.com/gorilla/websocket"
+	"github.com/improbable-eng/grpc-web/go/grpcweb"
 	log "github.com/sirupsen/logrus"
-
-	"github.com/kyeett/gameserver/entity"
-	"github.com/kyeett/gameserver/localserver"
-	"github.com/kyeett/gameserver/types"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
+	"github.com/kyeett/gameserver/entity"
+	"github.com/kyeett/gameserver/localserver"
 	pb "github.com/kyeett/gameserver/proto"
+	"github.com/kyeett/gameserver/types"
 )
 
 var _ pb.BackendServer = (*GrpcServer)(nil)
@@ -54,6 +58,80 @@ func (s *GrpcServer) Run(ctx context.Context, port string) {
 	if err := ss.Serve(lis); err != nil {
 		log.Fatalf("failed to serve: %v", err)
 	}
+}
+
+func (s *GrpcServer) RunWeb(ctx context.Context, port string) {
+	// lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+	// if err != nil {
+	// 	log.Fatalf("failed to listen: %v", err)
+	// }
+	// pb.RegisterBackendServer(ss, s)
+	// // Register reflection service on gRPC server.
+	// reflection.Register(ss)
+
+	// go func() {
+	// 	<-ctx.Done()
+	// 	ss.GracefulStop()
+	// }()
+	// log.Infof("starting server at %s", port)
+	// if err := ss.Serve(lis); err != nil {
+	// 	log.Fatalf("failed to serve: %v", err)
+	// }
+
+	ss := grpc.NewServer()
+
+	wrappedServer := grpcweb.WrapServer(ss,
+		grpcweb.WithWebsockets(true),
+		grpcweb.WithCorsForRegisteredEndpointsOnly(false),
+		grpcweb.WithWebsocketOriginFunc(func(req *http.Request) bool { return true }),
+		grpcweb.WithOriginFunc(func(origin string) bool { return true }),
+	)
+
+	handler := func(resp http.ResponseWriter, req *http.Request) {
+
+		// log.Println(req)
+		log.Println("Trolo:", req.ProtoMajor,
+			wrappedServer.IsAcceptableGrpcCorsRequest(req),
+			websocket.IsWebSocketUpgrade(req),
+			strings.Contains(req.Header.Get("Content-Type"), "application/grpc"))
+		log.Println(req.URL)
+		log.Println(req.ProtoMajor == 2, strings.Contains(req.Header.Get("Content-Type"), "application/grpc"),
+			websocket.IsWebSocketUpgrade(req))
+
+		log.Println()
+
+		if req.Method == "OPTIONS" {
+			allowCors(resp, req)
+			return
+		}
+
+		log.Println(req.Header)
+
+		wrappedServer.ServeHTTP(resp, req)
+		if strings.Contains(req.Header.Get("Content-Type"), "application/grpc") || websocket.IsWebSocketUpgrade(req) {
+			log.Println("In here!")
+		} else {
+			log.Println("Serve files!", req)
+		}
+	}
+
+	addr := "localhost:" + port
+	httpsSrv := &http.Server{
+		Addr:    addr,
+		Handler: http.HandlerFunc(handler),
+		// Some security settings
+		ReadHeaderTimeout: 5 * time.Second,
+		IdleTimeout:       120 * time.Second,
+		TLSConfig: &tls.Config{
+			PreferServerCipherSuites: true,
+			CurvePreferences: []tls.CurveID{
+				tls.CurveP256,
+				tls.X25519,
+			},
+		},
+	}
+
+	logger.Fatal(httpsSrv.ListenAndServeTLS("./cert.pem", "./key.pem"))
 }
 
 func (s *GrpcServer) NewPlayer(ctx context.Context, _ *pb.Empty) (*pb.PlayerID, error) {
@@ -118,4 +196,10 @@ func (s *GrpcServer) PerformAction(ctx context.Context, req *pb.ActionRequest) (
 		Theta: int32(e.Position.Theta),
 	}
 	return &pb.ActionResponse{Entity: &ent}, nil
+}
+
+func allowCors(w http.ResponseWriter, req *http.Request) {
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "POST, GET, OPTIONS, PUT, DELETE")
+	w.Header().Set("Access-Control-Allow-Headers", "Accept, Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, x-grpc-web")
 }
