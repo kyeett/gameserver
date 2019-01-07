@@ -14,7 +14,9 @@ import (
 
 func main() {
 	var port string
+	var secure bool
 	flag.StringVar(&port, "port", "10001", "port to serve on")
+	flag.BoolVar(&secure, "secure", false, "enable TLS")
 	flag.Parse()
 
 	//Enable tracing
@@ -28,6 +30,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ss.RunWeb(context.Background(), port)
-
+	ss.Run(context.Background(), port, secure)
 }

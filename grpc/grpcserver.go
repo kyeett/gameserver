@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/gorilla/websocket"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
 
@@ -129,7 +130,7 @@ func (s *GrpcServer) RunWeb(ctx context.Context, port string) {
 	// log.Fatal(httpsSrv.ListenAndServeTLS("./cert.pem", "./key.pem"))
 }
 
-func (s *GrpcServer) NewPlayer(ctx context.Context, _ *pb.Empty) (*pb.PlayerID, error) {
+func (s *GrpcServer) NewPlayer(ctx context.Context, _ *empty.Empty) (*pb.PlayerID, error) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 	p, err := s.local.NewPlayer()
@@ -141,7 +142,7 @@ func (s *GrpcServer) NewPlayer(ctx context.Context, _ *pb.Empty) (*pb.PlayerID, 
 }
 
 // Todo, decide format to send over wire
-func (s *GrpcServer) WorldRequest(ctx context.Context, _ *pb.Empty) (*pb.WorldResponse, error) {
+func (s *GrpcServer) WorldRequest(ctx context.Context, _ *empty.Empty) (*pb.WorldResponse, error) {
 	log.Info("got WorldRequest from client")
 	log.Error(*s)
 	log.Error(s.local)
@@ -152,7 +153,7 @@ func (s *GrpcServer) WorldRequest(ctx context.Context, _ *pb.Empty) (*pb.WorldRe
 		Height: int32(s.local.World().Height),
 	}, nil
 }
-func (s *GrpcServer) EntityStream(_ *pb.Empty, stream pb.Backend_EntityStreamServer) error {
+func (s *GrpcServer) EntityStream(_ *empty.Empty, stream pb.Backend_EntityStreamServer) error {
 
 	ticker := time.NewTicker(5 * time.Millisecond)
 	for {

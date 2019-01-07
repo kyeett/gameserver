@@ -14,13 +14,13 @@
 		Entity
 		ActionRequest
 		ActionResponse
-		Empty
 		WorldResponse
 		EntityResponse
 */
 package web
 
 import jspb "github.com/johanbrandhorst/protobuf/jspb"
+import google_protobuf "github.com/johanbrandhorst/protobuf/ptypes/empty"
 
 import (
 	context "context"
@@ -369,54 +369,6 @@ func (m *ActionResponse) Unmarshal(rawBytes []byte) (*ActionResponse, error) {
 	return m, nil
 }
 
-type Empty struct {
-}
-
-// MarshalToWriter marshals Empty to the provided writer.
-func (m *Empty) MarshalToWriter(writer jspb.Writer) {
-	if m == nil {
-		return
-	}
-
-	return
-}
-
-// Marshal marshals Empty to a slice of bytes.
-func (m *Empty) Marshal() []byte {
-	writer := jspb.NewWriter()
-	m.MarshalToWriter(writer)
-	return writer.GetResult()
-}
-
-// UnmarshalFromReader unmarshals a Empty from the provided reader.
-func (m *Empty) UnmarshalFromReader(reader jspb.Reader) *Empty {
-	for reader.Next() {
-		if m == nil {
-			m = &Empty{}
-		}
-
-		switch reader.GetFieldNumber() {
-		default:
-			reader.SkipField()
-		}
-	}
-
-	return m
-}
-
-// Unmarshal unmarshals a Empty from a slice of bytes.
-func (m *Empty) Unmarshal(rawBytes []byte) (*Empty, error) {
-	reader := jspb.NewReader(rawBytes)
-
-	m = m.UnmarshalFromReader(reader)
-
-	if err := reader.Err(); err != nil {
-		return nil, err
-	}
-
-	return m, nil
-}
-
 type WorldResponse struct {
 	Tiles  []byte
 	Width  int32
@@ -584,10 +536,10 @@ const _ = grpcweb.GrpcWebPackageIsVersion3
 // Client API for Backend service
 
 type BackendClient interface {
-	NewPlayer(ctx context.Context, in *Empty, opts ...grpcweb.CallOption) (*PlayerID, error)
+	NewPlayer(ctx context.Context, in *google_protobuf.Empty, opts ...grpcweb.CallOption) (*PlayerID, error)
 	PerformAction(ctx context.Context, in *ActionRequest, opts ...grpcweb.CallOption) (*ActionResponse, error)
-	WorldRequest(ctx context.Context, in *Empty, opts ...grpcweb.CallOption) (*WorldResponse, error)
-	EntityStream(ctx context.Context, in *Empty, opts ...grpcweb.CallOption) (Backend_EntityStreamClient, error)
+	WorldRequest(ctx context.Context, in *google_protobuf.Empty, opts ...grpcweb.CallOption) (*WorldResponse, error)
+	EntityStream(ctx context.Context, in *google_protobuf.Empty, opts ...grpcweb.CallOption) (Backend_EntityStreamClient, error)
 }
 
 type backendClient struct {
@@ -601,7 +553,7 @@ func NewBackendClient(hostname string, opts ...grpcweb.DialOption) BackendClient
 	}
 }
 
-func (c *backendClient) NewPlayer(ctx context.Context, in *Empty, opts ...grpcweb.CallOption) (*PlayerID, error) {
+func (c *backendClient) NewPlayer(ctx context.Context, in *google_protobuf.Empty, opts ...grpcweb.CallOption) (*PlayerID, error) {
 	resp, err := c.client.RPCCall(ctx, "NewPlayer", in.Marshal(), opts...)
 	if err != nil {
 		return nil, err
@@ -619,7 +571,7 @@ func (c *backendClient) PerformAction(ctx context.Context, in *ActionRequest, op
 	return new(ActionResponse).Unmarshal(resp)
 }
 
-func (c *backendClient) WorldRequest(ctx context.Context, in *Empty, opts ...grpcweb.CallOption) (*WorldResponse, error) {
+func (c *backendClient) WorldRequest(ctx context.Context, in *google_protobuf.Empty, opts ...grpcweb.CallOption) (*WorldResponse, error) {
 	resp, err := c.client.RPCCall(ctx, "WorldRequest", in.Marshal(), opts...)
 	if err != nil {
 		return nil, err
@@ -628,7 +580,7 @@ func (c *backendClient) WorldRequest(ctx context.Context, in *Empty, opts ...grp
 	return new(WorldResponse).Unmarshal(resp)
 }
 
-func (c *backendClient) EntityStream(ctx context.Context, in *Empty, opts ...grpcweb.CallOption) (Backend_EntityStreamClient, error) {
+func (c *backendClient) EntityStream(ctx context.Context, in *google_protobuf.Empty, opts ...grpcweb.CallOption) (Backend_EntityStreamClient, error) {
 	srv, err := c.client.NewClientStream(ctx, false, true, "EntityStream", opts...)
 	if err != nil {
 		return nil, err

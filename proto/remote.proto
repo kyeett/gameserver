@@ -3,12 +3,14 @@ syntax = "proto3";
 // Web exposes a backend server over gRPC.
 package web;
 
+import "google/protobuf/empty.proto";
 import "github.com/johanbrandhorst/protobuf/proto/gopherjs.proto";
 
 // Define the package locations the generated files will go into
 
 option (gopherjs.gopherjs_package) = "github.com/kyeett/gameserver/proto/web";
 option go_package = "github.com/kyeett/gameserver/proto";
+// option go_package = "github.com/golang/protobuf/ptypes/empty";
 
 // Backend defines the interface exposed by the backend.´j
 // TODO: Define functionality exposed by backend.
@@ -38,10 +40,6 @@ message ActionResponse {
 }
 
 
-
-message Empty {
-}
-
 message WorldResponse {
     bytes tiles = 1;
     int32 width = 2;
@@ -54,10 +52,10 @@ message EntityResponse {
 
 
 service Backend {
-    rpc NewPlayer(Empty) returns (PlayerID) {}
+    rpc NewPlayer(google.protobuf.Empty) returns (PlayerID) {}
     rpc PerformAction(ActionRequest) returns (ActionResponse) {}
-    rpc WorldRequest(Empty) returns (WorldResponse) {}
-    rpc EntityStream(Empty) returns (stream EntityResponse) {}
+    rpc WorldRequest(google.protobuf.Empty) returns (WorldResponse) {}
+    rpc EntityStream(google.protobuf.Empty) returns (stream EntityResponse) {}
 }
 
 

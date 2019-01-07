@@ -95,13 +95,10 @@ func World(name string) Option {
 	}
 }
 
-var defaultPort = 10001
-
 func RemoteState(addr string, secure bool) Option {
 	return func(o *options) error {
 		log.Debugf("Configure state server to: remote\n")
 		o.initiateStateFunc = func(g *Game) error {
-			// serverAddr := fmt.Sprintf("localhost:%d", defaultPort)
 			serverAddr := addr
 			s, err := grpc.NewClient(serverAddr, secure)
 			if err != nil {

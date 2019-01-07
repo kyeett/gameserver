@@ -1,6 +1,6 @@
 generate:
 	protoc -I. -Ivendor/ ./proto/remote.proto \
-		--gopherjs_out=plugins=grpc:$$GOPATH/src \
+		--gopherjs_out=plugins=grpc,Mgoogle/protobuf/empty.proto=github.com/johanbrandhorst/protobuf/ptypes/empty:$$GOPATH/src \
 		--go_out=plugins=grpc:$$GOPATH/src
 	go generate ./grpcweb/
 

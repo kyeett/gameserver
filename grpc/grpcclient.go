@@ -6,10 +6,9 @@ import (
 	"sync"
 	"time"
 
+	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials"
 
 	"github.com/kyeett/gameserver"
 	"github.com/kyeett/gameserver/entity"
@@ -31,35 +30,16 @@ type GrpcClient struct {
 	startedCh chan struct{} // Todo, better method for knowing if started?
 }
 
-var cert = "../cert.pem"
-
 func NewClient(serverAddr string, secure bool) (gameserver.GameServer, error) {
 	log.SetLevel(log.DebugLevel)
 	ctx := context.Background() // Todo move this out
 	ctx, _ = context.WithTimeout(ctx, 2*time.Second)
 
-	opts := []grpc.DialOption{}
-
-	switch secure {
-	case true:
-		creds, err := credentials.NewClientTLSFromFile(cert, "")
-		if err != nil {
-			return nil, errors.Wrapf(err, "could not load tls cert: %s", cert)
-		}
-		opts = append(opts, grpc.WithTransportCredentials(creds))
-	case false:
-		opts = append(opts, grpc.WithInsecure())
-	}
-	// opts = append(opts, grpc.WithInsecure())
-
-	log.Debugf("dialing to %s\n", serverAddr)
-	conn, err := grpc.Dial(serverAddr, opts...)
+	client, err := CorrectClient(serverAddr, secure)
 	if err != nil {
-		return nil, errors.Wrap(err, "new client")
+		return nil, errors.Wrap(err, "failed to create client")
 	}
-
-	client := pb.NewBackendClient(conn)
-	resp, err := client.WorldRequest(ctx, &pb.Empty{}) // grpc.WaitForReady(true)
+	resp, err := client.WorldRequest(ctx, &empty.Empty{}) // grpc.WaitForReady(true)
 	if err != nil {
 		log.Debugf("client failed to connect to %s\ndebug: %s", serverAddr, err)
 		return nil, errors.Errorf("client failed to connect to %s", serverAddr)
@@ -88,7 +68,7 @@ func NewClient(serverAddr string, secure bool) (gameserver.GameServer, error) {
 
 func (s *GrpcClient) recieveEntityUpdates() {
 	log.Debug("start entity stream")
-	stream, err := s.client.EntityStream(context.Background(), &pb.Empty{})
+	stream, err := s.client.EntityStream(context.Background(), &empty.Empty{})
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -147,7 +127,7 @@ func (s *GrpcClient) NewPlayer() (entity.Entity, error) {
 	t := time.Now()
 	ctx, _ := context.WithTimeout(context.Background(), 1000*time.Millisecond)
 	log.Debug("created a new player in", time.Since(t))
-	resp, err := s.client.NewPlayer(ctx, &pb.Empty{})
+	resp, err := s.client.NewPlayer(ctx, &empty.Empty{})
 	if err != nil {
 		return entity.Entity{}, err
 	}

@@ -8,7 +8,9 @@ import (
 
 	pbweb "github.com/kyeett/gameserver/proto/web"
 	"honnef.co/go/js/dom"
+
 	// "github.com/kyeett/grpcweb-boilerplate/proto/client"
+	"github.com/johanbrandhorst/protobuf/ptypes/empty"
 )
 
 // Build this snippet with GopherJS, minimize the output and
@@ -58,7 +60,7 @@ func setup() {
 	clas := pbweb.NewBackendClient(addr)
 	document.Body().SetInnerHTML(`<div><h2>GopherJS gRPC-Web is great!</h2></div>`)
 
-	resp, err := clas.NewPlayer(context.Background(), &pbweb.Empty{})
+	resp, err := clas.NewPlayer(context.Background(), &empty.Empty{})
 	if err != nil {
 		log.Fatal(err)
 	}
