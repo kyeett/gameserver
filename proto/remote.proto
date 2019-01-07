@@ -3,13 +3,14 @@ syntax = "proto3";
 // Web exposes a backend server over gRPC.
 package web;
 
-// import "github.com/johanbrandhorst/protobuf/proto/gopherjs.proto";
+import "github.com/johanbrandhorst/protobuf/proto/gopherjs.proto";
 
 // Define the package locations the generated files will go into
-// option (gopherjs.gopherjs_package) = "github.com/kyeett/gameserver/proto/client";
-option go_package = "github.com/kyeett/gameserver/grpc/proto;pb";
 
-// Backend defines the interface exposed by the backend.
+option (gopherjs.gopherjs_package) = "github.com/kyeett/gameserver/proto/web;pbweb";
+option go_package = "github.com/kyeett/gameserver/proto;pb";
+
+// Backend defines the interface exposed by the backend.´j
 // TODO: Define functionality exposed by backend.
 
 message PlayerID {

@@ -6,15 +6,15 @@ import (
 	"sync"
 	"time"
 
+	"github.com/pkg/errors"
+	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
 
 	"github.com/kyeett/gameserver"
 	"github.com/kyeett/gameserver/entity"
-	pb "github.com/kyeett/gameserver/grpc/proto"
-	"github.com/kyeett/gameserver/types"
-	"github.com/pkg/errors"
+	pb "github.com/kyeett/gameserver/proto"
 
-	log "github.com/sirupsen/logrus"
+	"github.com/kyeett/gameserver/types"
 )
 
 // Ensure struct implements interface

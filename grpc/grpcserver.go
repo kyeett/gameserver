@@ -15,7 +15,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/reflection"
 
-	pb "github.com/kyeett/gameserver/grpc/proto"
+	pb "github.com/kyeett/gameserver/proto"
 )
 
 var _ pb.BackendServer = (*GrpcServer)(nil)
