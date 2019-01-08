@@ -3,6 +3,7 @@ package game
 import (
 	"context"
 	"strings"
+	"time"
 
 	"github.com/onrik/logrus/filename"
 	log "github.com/sirupsen/logrus"
@@ -13,6 +14,7 @@ import (
 	"github.com/kyeett/gameserver/grpc"
 	"github.com/kyeett/gameserver/localstate"
 	"github.com/kyeett/gameserver/types"
+	"github.com/kyeett/mapgenerator/gen"
 )
 
 type Game struct {
@@ -74,22 +76,28 @@ func New(opt ...Option) (*Game, error) {
 }
 
 func World(name string) Option {
-	definedWorlds := map[string]types.World{
-		"first":   types.FirstWorld,
-		"test4x4": types.Test4x4World,
-	}
 
 	return func(o *options) error {
 
-		if _, ok := definedWorlds[name]; !ok {
-			s := []string{}
-			for world := range definedWorlds {
-				s = append(s, world)
-			}
+		switch name {
+		case "generate", "generate10,10":
+			o.world = generateMap(10, 10)
+		case "generate20x20":
+			o.world = generateMap(20, 20)
+		case "generate40x30":
+			o.world = generateMap(40, 30)
+		case "first":
+			o.world = types.FirstWorld
+		case "test4x4":
+			o.world = types.Test4x4World
+		case "big":
+			o.world = types.BigWorld
+		default:
+
+			s := []string{"first", "test4x4", "big", "generate10,10", "generate20x20", "generate40,30"}
 			return errors.Errorf("No such map '%s'. Valid ones are %s", name, strings.Join(s, ", "))
 		}
 
-		o.world = definedWorlds[name]
 		return nil
 	}
 }
@@ -131,4 +139,21 @@ func DevServer(host string) Option {
 		}
 		return nil
 	}
+}
+
+func generateMap(width, height int) types.World {
+	m := gen.GenerateParam(2.5, 2.5, time.Now().Unix(), 2, width, height)
+
+	tiles := []types.Tile{}
+
+	for y := 0; y < len(m); y++ {
+		for x := 0; x < len(m[0]); x++ {
+			if m[y][x] < 0.4 {
+				tiles = append(tiles, types.Water)
+			} else {
+				tiles = append(tiles, types.Grass)
+			}
+		}
+	}
+	return types.NewWorld(tiles, width, height)
 }

@@ -3,10 +3,11 @@ package localstate
 import (
 	"crypto/md5"
 	"encoding/hex"
-	"errors"
 	"math/rand"
 	"strconv"
 	"sync"
+
+	"github.com/pkg/errors"
 
 	log "github.com/sirupsen/logrus"
 
@@ -42,15 +43,29 @@ func (s *LocalState) NewPlayer() (entity.Entity, error) {
 	ID := newID()
 
 	s.mu.Lock()
+	defer s.mu.Unlock()
+
+	var pos types.Position
+	var i, maxAttempts = 0, 1000
+	for ; i <= maxAttempts; i++ {
+		pos = types.Position{types.Coord{rand.Intn(s.world.Width), rand.Intn(s.world.Height)}, 0}
+		if s.world.ValidTarget(pos) {
+			break
+		}
+
+		if i == maxAttempts {
+			return entity.Entity{}, errors.Errorf("Failed to find a valid start position after %d attempts\n", i)
+		}
+	}
+
 	e := entity.Entity{
 		ID:       ID,
 		Type:     entity.Character,
-		Position: types.Position{types.Coord{rand.Intn(3), rand.Intn(3) + 1}, 0},
+		Position: pos,
 		Owner:    "",
 	}
 
 	s.entities = append(s.entities, e)
-	s.mu.Unlock()
 	log.Infof("New player with ID: %s joined", e.ID)
 	return e, nil
 }
@@ -60,7 +75,7 @@ func (s *LocalState) Entities() []entity.Entity {
 	tmp := make([]entity.Entity, len(s.entities))
 	copy(tmp, s.entities)
 	s.mu.RUnlock()
-	return s.entities
+	return tmp
 }
 
 func (s *LocalState) World() types.World {
