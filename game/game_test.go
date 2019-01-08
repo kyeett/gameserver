@@ -20,7 +20,7 @@ var stateTypes = []struct {
 	// 	[]Option{RemoteState("localhost:10001", false), DevServer("localhost:10001", false)},
 	// },
 	{"remote-state-secure",
-		[]Option{RemoteState("localhost:10002", true), DevServer("localhost:10002", true)},
+		[]Option{RemoteState("localhost:10002", true), DevServer("localhost:10002")},
 	},
 }
 
@@ -63,33 +63,31 @@ func Test_StressTest(t *testing.T) {
 	}
 	log.SetLevel(log.DebugLevel)
 
-	nGames := 5
-	for _, secure := range []bool{false, true} {
-		for i := 0; i < nGames; i++ {
-			t.Run("remote-new-game-secure:"+strconv.FormatBool(secure), func(t *testing.T) {
-				t.Parallel()
-				p := freeTestPort(t)
-				host := "localhost:" + p
-				opts := []Option{RemoteState(host, secure), DevServer(host, secure)}
-				g, err := New(opts...)
-				if err != nil {
-					t.Fatalf("creating game failed: %s\n", err)
-				}
+	nGames := 10
+	for i := 0; i < nGames; i++ {
+		t.Run("remote-new-game-secure:"+strconv.FormatBool(true), func(t *testing.T) {
+			t.Parallel()
+			p := freeTestPort(t)
+			host := "localhost:" + p
+			opts := []Option{RemoteState(host, true), DevServer(host)}
+			g, err := New(opts...)
+			if err != nil {
+				t.Fatalf("creating game failed: %s\n", err)
+			}
 
-				e, err := g.NewPlayer()
-				if err != nil {
-					t.Fatal(p)
-				}
+			e, err := g.NewPlayer()
+			if err != nil {
+				t.Fatal(p)
+			}
 
-				for m := 0; m < 100; m++ {
-					pos := types.Position{Coord: types.Coord{X: m%2 + 1, Y: m%2 + 1}, Theta: 3}
-					_, err := g.PerformAction(e, pos)
-					if err != nil {
-						t.Fatal(err)
-					}
+			for m := 0; m < 100; m++ {
+				pos := types.Position{Coord: types.Coord{X: m%2 + 1, Y: m%2 + 1}, Theta: 3}
+				_, err := g.PerformAction(e, pos)
+				if err != nil {
+					t.Fatal(err)
 				}
-			})
-		}
+			}
+		})
 	}
 }
 

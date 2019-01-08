@@ -11,14 +11,14 @@ import (
 
 	"github.com/kyeett/gameserver"
 	"github.com/kyeett/gameserver/grpc"
-	"github.com/kyeett/gameserver/localserver"
+	"github.com/kyeett/gameserver/localstate"
 	"github.com/kyeett/gameserver/types"
 )
 
 type Game struct {
 	ctx  context.Context
 	opts options
-	gameserver.GameServer
+	gameserver.GameState
 }
 
 // An option sets options such as what type of world to use, number of players, etc.
@@ -32,7 +32,7 @@ type options struct {
 
 func initiateLocalState(g *Game) error {
 	log.Debugf("Syncing locally")
-	g.GameServer = localserver.New(g.opts.world)
+	g.GameState = localstate.New(g.opts.world)
 	return nil
 }
 
@@ -104,7 +104,7 @@ func RemoteState(addr string, secure bool) Option {
 			if err != nil {
 				return err
 			}
-			g.GameServer = s
+			g.GameState = s
 			log.Debugf("Syncing state towards %s\n", serverAddr)
 			return nil
 		}

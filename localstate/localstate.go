@@ -1,4 +1,4 @@
-package localserver
+package localstate
 
 import (
 	"crypto/md5"
@@ -15,26 +15,27 @@ import (
 )
 
 // Ensure struct implements interface
-var _ gameserver.GameServer = (*LocalServer)(nil)
+var _ gameserver.GameState = (*LocalState)(nil)
 
-type LocalServer struct {
+type LocalState struct {
 	world    types.World
 	entities []entity.Entity
+	// &sync.RWMutex{}
 }
 
-func New(world types.World) gameserver.GameServer {
+func New(world types.World) gameserver.GameState {
 	entities := []entity.Entity{
 		entity.Entity{ID: newID(), Type: entity.Coin, Position: types.Position{types.Coord{2, 1}, 0}, Owner: ""},
 		entity.Entity{ID: newID(), Type: entity.Coin, Position: types.Position{types.Coord{8, 2}, 0}, Owner: ""},
 	}
 
-	return &LocalServer{
+	return &LocalState{
 		world:    world,
 		entities: entities,
 	}
 }
 
-func (s *LocalServer) NewPlayer() (entity.Entity, error) {
+func (s *LocalState) NewPlayer() (entity.Entity, error) {
 
 	ID := newID()
 	e := entity.Entity{
@@ -49,15 +50,15 @@ func (s *LocalServer) NewPlayer() (entity.Entity, error) {
 	return e, nil
 }
 
-func (s *LocalServer) Entities() []entity.Entity {
+func (s *LocalState) Entities() []entity.Entity {
 	return s.entities
 }
 
-func (s *LocalServer) World() types.World {
+func (s *LocalState) World() types.World {
 	return s.world
 }
 
-func (s *LocalServer) checkCollisions(p entity.Entity) {
+func (s *LocalState) checkCollisions(p entity.Entity) {
 	log.Debug("check for collisions")
 	// Check for collisions
 	for i, e := range s.entities {
@@ -68,7 +69,7 @@ func (s *LocalServer) checkCollisions(p entity.Entity) {
 	}
 }
 
-func (s *LocalServer) PerformAction(e entity.Entity, p types.Position) (entity.Entity, error) {
+func (s *LocalState) PerformAction(e entity.Entity, p types.Position) (entity.Entity, error) {
 
 	log.Info("Perform action", e, p)
 	e, err := s.moveTo(e, p)
@@ -81,7 +82,7 @@ func (s *LocalServer) PerformAction(e entity.Entity, p types.Position) (entity.E
 }
 
 // Todo: design the rules for entity interaction a bit better
-func (s *LocalServer) moveTo(a entity.Entity, c types.Position) (entity.Entity, error) {
+func (s *LocalState) moveTo(a entity.Entity, c types.Position) (entity.Entity, error) {
 	if s.world.ValidTarget(c) == false {
 		return entity.Entity{}, errors.New("invalid move")
 	}

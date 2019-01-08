@@ -14,9 +14,8 @@ import (
 
 func main() {
 	var host string
-	var secure bool
+
 	flag.StringVar(&host, "host", "localhost:10001", "hostname including port")
-	flag.BoolVar(&secure, "secure", false, "enable TLS")
 	flag.Parse()
 
 	//Enable tracing
@@ -30,5 +29,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ss.Run(context.Background(), host, secure)
+	ss.Run(context.Background(), host)
 }

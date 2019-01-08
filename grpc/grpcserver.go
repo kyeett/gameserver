@@ -18,7 +18,7 @@ import (
 	"google.golang.org/grpc"
 
 	"github.com/kyeett/gameserver/entity"
-	"github.com/kyeett/gameserver/localserver"
+	"github.com/kyeett/gameserver/localstate"
 	pb "github.com/kyeett/gameserver/proto"
 	"github.com/kyeett/gameserver/types"
 )
@@ -26,13 +26,13 @@ import (
 var _ pb.BackendServer = (*GrpcServer)(nil)
 
 type GrpcServer struct {
-	local *localserver.LocalServer
+	local *localstate.LocalState
 	mu    *sync.RWMutex
 }
 
 func NewServer(w types.World) (*GrpcServer, error) {
 	log.Info("new remote server created")
-	l := localserver.New(w).(*localserver.LocalServer)
+	l := localstate.New(w).(*localstate.LocalState)
 
 	return &GrpcServer{
 		l,

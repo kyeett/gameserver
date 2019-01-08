@@ -16,9 +16,9 @@ import (
 )
 
 // Ensure struct implements interface
-var _ gameserver.GameServer = (*GrpcClient)(nil)
+var _ gameserver.GameState = (*GrpcClient)(nil)
 
-func NewClient(serverAddr string, secure bool) (gameserver.GameServer, error) {
+func NewClient(serverAddr string, secure bool) (gameserver.GameState, error) {
 	log.SetLevel(log.DebugLevel)
 	ctx := context.Background() // Todo move this out
 	ctx, _ = context.WithTimeout(ctx, 3*time.Second)
