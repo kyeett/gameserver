@@ -15,10 +15,9 @@ install:
 		./vendor/github.com/gopherjs/gopherjs
 
 generate_cert:
-	go run "$$(go env GOROOT)/src/crypto/tls/generate_cert.go" \
+	cd insecure && go run "$$(go env GOROOT)/src/crypto/tls/generate_cert.go" \
 		--host=localhost,127.0.0.1 \
 		--ecdsa-curve=P256 \
 		--ca=true
-
 serve:
 	go run main.go

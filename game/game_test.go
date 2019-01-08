@@ -16,16 +16,16 @@ var stateTypes = []struct {
 }{
 	{"local",
 		[]Option{}},
-	{"remote-state",
-		[]Option{RemoteState("localhost:10001", false), DevServer("10001", false)},
-	},
+	// {"remote-state",
+	// 	[]Option{RemoteState("localhost:10001", false), DevServer("localhost:10001", false)},
+	// },
 	{"remote-state-secure",
-		[]Option{RemoteState("localhost:10002", true), DevServer("10002", true)},
+		[]Option{RemoteState("localhost:10002", true), DevServer("localhost:10002", true)},
 	},
 }
 
 func Test_NewPlayers(t *testing.T) {
-	nPlayers := 10 //
+	nPlayers := 100 //
 
 	log.SetLevel(log.DebugLevel)
 	for _, tc := range stateTypes {
@@ -63,13 +63,14 @@ func Test_StressTest(t *testing.T) {
 	}
 	log.SetLevel(log.DebugLevel)
 
-	nGames := 10
+	nGames := 5
 	for _, secure := range []bool{false, true} {
 		for i := 0; i < nGames; i++ {
 			t.Run("remote-new-game-secure:"+strconv.FormatBool(secure), func(t *testing.T) {
 				t.Parallel()
 				p := freeTestPort(t)
-				opts := []Option{RemoteState("localhost:"+p, secure), DevServer(p, secure)}
+				host := "localhost:" + p
+				opts := []Option{RemoteState(host, secure), DevServer(host, secure)}
 				g, err := New(opts...)
 				if err != nil {
 					t.Fatalf("creating game failed: %s\n", err)

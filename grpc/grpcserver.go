@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/tls"
 	"fmt"
-	"net"
 	"net/http"
 	"strings"
 	"sync"
@@ -13,10 +12,10 @@ import (
 	"github.com/golang/protobuf/ptypes/empty"
 	"github.com/gorilla/websocket"
 	"github.com/improbable-eng/grpc-web/go/grpcweb"
+	"golang.org/x/crypto/acme/autocert"
 
 	log "github.com/sirupsen/logrus"
 	"google.golang.org/grpc"
-	"google.golang.org/grpc/reflection"
 
 	"github.com/kyeett/gameserver/entity"
 	"github.com/kyeett/gameserver/localserver"
@@ -42,33 +41,33 @@ func NewServer(w types.World) (*GrpcServer, error) {
 }
 
 // Todo clean up
-func (s *GrpcServer) Run(ctx context.Context, port string, secure bool) {
-	if secure {
-		s.RunWeb(ctx, port)
+func (s *GrpcServer) Run(ctx context.Context, host string) {
+	// Todo: remove non-web flow
+	if true {
+		s.RunWeb(ctx, host)
 		return
 	}
 
-	lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
-	if err != nil {
-		log.Fatalf("failed to listen: %v", err)
-	}
-	ss := grpc.NewServer()
-	pb.RegisterBackendServer(ss, s)
-	// Register reflection service on gRPC server.
-	reflection.Register(ss)
+	// lis, err := net.Listen("tcp", fmt.Sprintf(":%s", port))
+	// if err != nil {
+	// 	log.Fatalf("failed to listen: %v", err)
+	// }
+	// ss := grpc.NewServer()
+	// pb.RegisterBackendServer(ss, s)
+	// // Register reflection service on gRPC server.
+	// reflection.Register(ss)
 
-	go func() {
-		<-ctx.Done()
-		ss.GracefulStop()
-	}()
-	log.Infof("starting server at %s", port)
-	if err := ss.Serve(lis); err != nil {
-		log.Fatalf("failed to serve: %v", err)
-	}
+	// go func() {
+	// 	<-ctx.Done()
+	// 	ss.GracefulStop()
+	// }()
+	// log.Infof("starting server at %s", port)
+	// if err := ss.Serve(lis); err != nil {
+	// 	log.Fatalf("failed to serve: %v", err)
+	// }
 }
 
-func (s *GrpcServer) RunWeb(ctx context.Context, port string) {
-	log.Infof("start a http server at %s", port)
+func (s *GrpcServer) RunWeb(ctx context.Context, host string) {
 
 	ss := grpc.NewServer()
 	pb.RegisterBackendServer(ss, s)
@@ -109,9 +108,9 @@ func (s *GrpcServer) RunWeb(ctx context.Context, port string) {
 		}
 	}
 
-	addr := "localhost:" + port
 	httpsSrv := &http.Server{
-		Addr:    addr,
+		// Addr:    addr,
+		Addr:    ":https",
 		Handler: http.HandlerFunc(handler),
 		// Some security settings
 		ReadHeaderTimeout: 5 * time.Second,
@@ -125,8 +124,44 @@ func (s *GrpcServer) RunWeb(ctx context.Context, port string) {
 		},
 	}
 
-	log.Infof("Starting server on %s\n", addr)
-	log.Fatal(httpsSrv.ListenAndServeTLS("../cert.pem", "../key.pem"))
+	// Serve on localhost with localhost certs if no host provided
+	if host == "" {
+		host = "localhost:10001"
+	}
+
+	if strings.Contains(host, "localhost") {
+		httpsSrv.Addr = host
+		log.Infof("Serving on %s", host)
+		log.Fatal(httpsSrv.ListenAndServeTLS("../insecure/cert.pem", "../insecure/key.pem"))
+		return
+	}
+
+	// Copied from Johan's example: https://github.com/johanbrandhorst/grpcweb-example/blob/9a2beb24cfbe063c2186ca9217892ef95ff2cee0/main.go#L82
+	// Create auto-certificate https server
+	m := autocert.Manager{
+		Prompt:     autocert.AcceptTOS,
+		HostPolicy: autocert.HostWhitelist(host),
+		Cache:      autocert.DirCache("/certs"),
+	}
+
+	// Create server for redirecting HTTP to HTTPS
+	httpSrv := &http.Server{
+		Addr:         ":http",
+		ReadTimeout:  httpsSrv.ReadTimeout,
+		WriteTimeout: httpsSrv.WriteTimeout,
+		IdleTimeout:  httpsSrv.IdleTimeout,
+		Handler:      m.HTTPHandler(nil),
+	}
+
+	go func() {
+		log.Fatal(httpSrv.ListenAndServe())
+	}()
+
+	httpsSrv.TLSConfig.GetCertificate = m.GetCertificate
+	log.Info("Serving on https://0.0.0.0:443, authenticating for https://", host)
+	log.Fatal(httpsSrv.ListenAndServeTLS("", ""))
+
+	// log.Fatal(httpsSrv.ListenAndServeTLS("../cert.pem", "../key.pem"))
 	// log.Fatal(httpsSrv.ListenAndServeTLS("./cert.pem", "./key.pem"))
 }
 

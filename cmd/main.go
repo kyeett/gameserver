@@ -13,9 +13,9 @@ import (
 )
 
 func main() {
-	var port string
+	var host string
 	var secure bool
-	flag.StringVar(&port, "port", "10001", "port to serve on")
+	flag.StringVar(&host, "host", "localhost:10001", "hostname including port")
 	flag.BoolVar(&secure, "secure", false, "enable TLS")
 	flag.Parse()
 
@@ -30,5 +30,5 @@ func main() {
 		log.Fatal(err)
 	}
 
-	ss.Run(context.Background(), port, secure)
+	ss.Run(context.Background(), host, secure)
 }

@@ -27,7 +27,7 @@ func Test_NewPlayers(t *testing.T) {
 	}
 	fmt.Println(s.local.World())
 	time.Sleep(1 * time.Millisecond)
-	go s.Run(ctx, defaultPort, secure)
+	go s.Run(ctx, defaultAddr)
 	fmt.Println(s.local.World())
 	time.Sleep(1 * time.Millisecond)
 

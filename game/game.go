@@ -113,7 +113,7 @@ func RemoteState(addr string, secure bool) Option {
 }
 
 // DevServer creates and runs game state server on localhost
-func DevServer(port string, secure bool) Option {
+func DevServer(host string) Option {
 	return func(o *options) error {
 		log.Debugf("Configure game to start local dev server\n")
 		o.startDevServer = func(g *Game) error {
@@ -125,7 +125,7 @@ func DevServer(port string, secure bool) Option {
 				return err
 			}
 
-			go ss.Run(g.ctx, port, secure)
+			go ss.Run(g.ctx, host)
 
 			return nil
 		}

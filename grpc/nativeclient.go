@@ -16,7 +16,7 @@ import (
 	"google.golang.org/grpc/credentials"
 )
 
-var cert = "../cert.pem"
+var cert = "../insecure/cert.pem"
 
 type GrpcClient struct {
 	world     types.World

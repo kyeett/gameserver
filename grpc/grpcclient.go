@@ -21,7 +21,7 @@ var _ gameserver.GameServer = (*GrpcClient)(nil)
 func NewClient(serverAddr string, secure bool) (gameserver.GameServer, error) {
 	log.SetLevel(log.DebugLevel)
 	ctx := context.Background() // Todo move this out
-	ctx, _ = context.WithTimeout(ctx, 2*time.Second)
+	ctx, _ = context.WithTimeout(ctx, 3*time.Second)
 
 	client, err := CorrectClient(serverAddr, secure)
 	if err != nil {
