@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"net/http"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/golang/protobuf/ptypes/empty"
@@ -27,7 +26,6 @@ var _ pb.BackendServer = (*GrpcServer)(nil)
 
 type GrpcServer struct {
 	local *localstate.LocalState
-	mu    *sync.RWMutex
 }
 
 func NewServer(w types.World) (*GrpcServer, error) {
@@ -36,7 +34,6 @@ func NewServer(w types.World) (*GrpcServer, error) {
 
 	return &GrpcServer{
 		l,
-		&sync.RWMutex{},
 	}, nil
 }
 
@@ -166,8 +163,6 @@ func (s *GrpcServer) RunWeb(ctx context.Context, host string) {
 }
 
 func (s *GrpcServer) NewPlayer(ctx context.Context, _ *empty.Empty) (*pb.PlayerID, error) {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	p, err := s.local.NewPlayer()
 	if err != nil {
 		return nil, err
@@ -194,10 +189,8 @@ func (s *GrpcServer) EntityStream(_ *empty.Empty, stream pb.Backend_EntityStream
 	for {
 		<-ticker.C
 
-		s.mu.Lock()
 		e := s.local.Entities()
 		payload, err := GobMarshal(&e)
-		s.mu.Unlock()
 		if err != nil {
 			return err
 		}
@@ -213,8 +206,6 @@ func (s *GrpcServer) EntityStream(_ *empty.Empty, stream pb.Backend_EntityStream
 func (s *GrpcServer) PerformAction(ctx context.Context, req *pb.ActionRequest) (*pb.ActionResponse, error) {
 	tmpEntity := req.GetEntity()
 
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	e, err := s.local.PerformAction(entity.Entity{ID: tmpEntity.GetID()},
 		types.Position{
 			Coord: types.Coord{X: int(tmpEntity.GetX()), Y: int(tmpEntity.GetY())},

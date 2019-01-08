@@ -6,6 +6,7 @@ import (
 	"errors"
 	"math/rand"
 	"strconv"
+	"sync"
 
 	log "github.com/sirupsen/logrus"
 
@@ -20,7 +21,7 @@ var _ gameserver.GameState = (*LocalState)(nil)
 type LocalState struct {
 	world    types.World
 	entities []entity.Entity
-	// &sync.RWMutex{}
+	mu       *sync.RWMutex
 }
 
 func New(world types.World) gameserver.GameState {
@@ -32,25 +33,33 @@ func New(world types.World) gameserver.GameState {
 	return &LocalState{
 		world:    world,
 		entities: entities,
+		mu:       &sync.RWMutex{},
 	}
 }
 
 func (s *LocalState) NewPlayer() (entity.Entity, error) {
 
 	ID := newID()
+
+	s.mu.Lock()
 	e := entity.Entity{
 		ID:       ID,
 		Type:     entity.Character,
-		Position: types.Position{types.Coord{rand.Intn(3), rand.Intn(3)}, 0},
+		Position: types.Position{types.Coord{rand.Intn(3), rand.Intn(3) + 1}, 0},
 		Owner:    "",
 	}
 
 	s.entities = append(s.entities, e)
+	s.mu.Unlock()
 	log.Infof("New player with ID: %s joined", e.ID)
 	return e, nil
 }
 
 func (s *LocalState) Entities() []entity.Entity {
+	s.mu.RLock()
+	tmp := make([]entity.Entity, len(s.entities))
+	copy(tmp, s.entities)
+	s.mu.RUnlock()
 	return s.entities
 }
 
@@ -61,12 +70,14 @@ func (s *LocalState) World() types.World {
 func (s *LocalState) checkCollisions(p entity.Entity) {
 	log.Debug("check for collisions")
 	// Check for collisions
+	s.mu.RLock()
 	for i, e := range s.entities {
 		if p != e && p.Position.Coord == e.Position.Coord {
 			log.Info("Object ", p, "destroys", e)
 			s.entities[i] = e.Destroy(p.ID)
 		}
 	}
+	s.mu.RUnlock()
 }
 
 func (s *LocalState) PerformAction(e entity.Entity, p types.Position) (entity.Entity, error) {
@@ -86,6 +97,8 @@ func (s *LocalState) moveTo(a entity.Entity, c types.Position) (entity.Entity, e
 	if s.world.ValidTarget(c) == false {
 		return entity.Entity{}, errors.New("invalid move")
 	}
+	s.mu.Lock()
+	defer s.mu.Unlock()
 
 	var found = -1
 	var blocked bool
