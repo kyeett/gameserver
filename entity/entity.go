@@ -12,6 +12,7 @@ const (
 	Coin Type = iota + 1
 	Score
 	Character
+	Bridge
 	Empty
 )
 
@@ -23,6 +24,8 @@ func (t Type) String() string {
 		return "Score"
 	case Character:
 		return "Character"
+	case Bridge:
+		return "Bridge"
 	case Empty:
 		return "Empty"
 	}

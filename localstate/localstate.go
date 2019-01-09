@@ -107,11 +107,43 @@ func (s *LocalState) PerformAction(e entity.Entity, p types.Position) (entity.En
 	return e, nil
 }
 
+func (s *LocalState) bridgable(a entity.Entity, p types.Position) bool {
+	Up := types.Coord{0, -1}
+	Left := types.Coord{-1, 0}
+	Down := types.Coord{0, 1}
+	Right := types.Coord{1, 0}
+
+	var next, prev types.Coord
+	switch p.Theta {
+	case 0:
+		next = p.Coord.Add(Up)
+		prev = p.Coord.Add(Down)
+	case 3:
+		next = p.Coord.Add(Left)
+		prev = p.Coord.Add(Right)
+	case 2:
+		next = p.Coord.Add(Down)
+		prev = p.Coord.Add(Up)
+	case 1:
+		next = p.Coord.Add(Right)
+		prev = p.Coord.Add(Left)
+	}
+
+	if s.world.At(p.Coord) == types.Water && s.world.At(next) != types.Water && s.world.At(prev) != types.Water {
+		return true
+	}
+	return false
+}
+
 // Todo: design the rules for entity interaction a bit better
 func (s *LocalState) moveTo(a entity.Entity, c types.Position) (entity.Entity, error) {
-	if s.world.ValidTarget(c) == false {
+
+	bridgable := s.bridgable(a, c)
+
+	if s.world.ValidTarget(c) == false && !bridgable {
 		return entity.Entity{}, errors.New("invalid move")
 	}
+
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
